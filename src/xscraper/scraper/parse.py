@@ -1,7 +1,7 @@
 import datetime as dt
 
 import pytz
-from splatnet3_scraper.query import QueryHandler, QueryResponse
+from splatnet3_scraper.query import QueryResponse
 
 from xscraper.scraper.types import Player, Schedule
 from xscraper.scraper.utils import base64_decode, color_floats_to_hex
