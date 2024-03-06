@@ -28,3 +28,7 @@ def calculate_season_number(timestamp: dt.datetime) -> int:
         offset = -1
 
     return year + offset + 1
+
+
+def pull_previous_schedule(timestamp: dt.datetime) -> bool:
+    return (timestamp.minute < 15) and (timestamp.hour % 2 == 0)

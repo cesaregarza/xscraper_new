@@ -3,6 +3,7 @@ import datetime as dt
 import pytz
 from splatnet3_scraper.query import QueryResponse
 
+from xscraper import constants as xc
 from xscraper.scraper.types import Player, Schedule
 from xscraper.scraper.utils import base64_decode, color_floats_to_hex
 
@@ -49,7 +50,7 @@ def parse_time(time: str) -> dt.datetime:
 
 
 def parse_schedule(data: QueryResponse) -> Schedule:
-    responses = data["xSchedules", "nodes"]
+    responses = data[xc.schedule_path]
     schedule = []
     for response in responses:
         setting = response["xMatchSetting"]

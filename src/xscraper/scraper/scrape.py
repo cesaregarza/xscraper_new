@@ -4,12 +4,17 @@ import pytz
 from splatnet3_scraper.query import QueryHandler, QueryResponse
 
 from xscraper import constants as xc
-from xscraper.scraper.parse import parse_players_in_mode
+from xscraper.scraper.parse import (
+    parse_players_in_mode,
+    parse_schedule,
+    parse_time,
+)
 from xscraper.scraper.types import Player, Schedule
 from xscraper.scraper.utils import (
     base64_decode,
-    color_floats_to_hex,
     calculate_season_number,
+    color_floats_to_hex,
+    pull_previous_schedule,
 )
 from xscraper.types import Mode, Region
 
@@ -88,3 +93,8 @@ def scrape_all_players_in_mode(
 
         out.extend(players)
     return out
+
+
+def get_schedule(scraper: QueryHandler) -> list[Schedule]:
+    response = scraper.query(xc.schedule_query)
+    return parse_schedule(response)
