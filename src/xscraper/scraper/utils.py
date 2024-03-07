@@ -86,12 +86,19 @@ def round_down_nearest_rotation(timestamp: dt.datetime) -> dt.datetime:
     )
 
 
-def get_current_rotation_start() -> dt.datetime:
+def get_current_rotation_start(previous: bool = False) -> dt.datetime:
     """Get the current rotation start time in UTC.
+
+    Args:
+        previous (bool): If True, return the previous rotation start time.
+        Defaults to False.
 
     Returns:
         dt.datetime: The current rotation start time.
     """
     utc_tz = pytz.timezone("UTC")
     timestamp = dt.datetime.now(utc_tz)
-    return round_down_nearest_rotation(timestamp)
+    out = round_down_nearest_rotation(timestamp)
+    if previous:
+        out -= dt.timedelta(hours=2)
+    return out
