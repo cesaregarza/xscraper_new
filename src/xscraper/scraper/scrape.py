@@ -15,6 +15,7 @@ from xscraper.scraper.utils import (
     calculate_season_number,
     color_floats_to_hex,
     pull_previous_schedule,
+    round_down_nearest_rotation,
 )
 from xscraper.types import Mode, Region
 
