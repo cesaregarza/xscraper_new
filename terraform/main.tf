@@ -1,3 +1,4 @@
+# Define the required providers
 terraform {
   required_providers {
     docker = {
@@ -9,20 +10,12 @@ terraform {
   }
 }
 
-# Use a local provider for the dev environment
-provider "docker" {}
-
-# Use the DigitalOcean provider for the prod environment
-provider "digitalocean" {
-  token = var.do_token
+# Use workspace to determine the environment
+locals {
+  environment = terraform.workspace == "default" ? "dev" : terraform.workspace
 }
 
-# Call the dev module
-module "dev" {
-  source = "./modules/dev"
-}
-
-# Call the prod module
-module "prod" {
-  source = "./modules/prod"
+# Call the appropriate module based on the workspace
+module "environment" {
+  source = "./modules/${local.environment}"
 }
