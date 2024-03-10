@@ -1,16 +1,21 @@
-import os
 import datetime as dt
+import os
 
-from splatnet3_scraper.query import QueryHandler
 from dotenv import load_dotenv
+from splatnet3_scraper.query import QueryHandler
 
-from xscraper.scraper.scrape import scrape_all_players_in_mode, get_schedule
-from xscraper.scraper.utils import pull_previous_schedule, get_current_rotation_start
 from xscraper import constants as xc
+from xscraper.scraper.scrape import get_schedule, scrape_all_players_in_mode
 from xscraper.scraper.types import Player, Schedule
+from xscraper.scraper.utils import (
+    get_current_rotation_start,
+    pull_previous_schedule,
+)
+
 
 def scrape(scraper: QueryHandler) -> list[Player]:
     players = []
+
 
 def main() -> None:
     load_dotenv()

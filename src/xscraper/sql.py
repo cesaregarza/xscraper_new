@@ -1,3 +1,5 @@
+import datetime as dt
+
 from sqlalchemy import (
     Boolean,
     Column,
@@ -7,7 +9,9 @@ from sqlalchemy import (
     Integer,
     String,
     UniqueConstraint,
+    text,
 )
+from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -38,31 +42,45 @@ class Schedule(Base):
 class Player(Base):
     __tablename__ = "players"
 
-    primary_key = Column(Integer, primary_key=True, autoincrement=True)
-    id = Column(String, index=True)
-    name = Column(String)
-    name_id = Column(String)
-    rank = Column(Integer)
-    x_power = Column(Float, index=True)
-    weapon = Column(String, index=True)
-    weapon_id = Column(String, index=True)
-    weapon_sub = Column(String, index=True)
-    weapon_sub_id = Column(String, index=True)
-    weapon_special = Column(String, index=True)
-    weapon_special_id = Column(String, index=True)
-    timestamp = Column(DateTime(timezone=True), index=True)
-    mode = Column(String, index=True)
-    region = Column(String, index=True)
-    rotation_start = Column(DateTime(timezone=True), index=True)
+    player_id = Column(String, primary_key=True)
+    name = Column(String, nullable=False)
+    name_id = Column(String, nullable=False)
+    splashtag = Column(
+        String,
+        unique=True,
+        nullable=False,
+        default=text("name || '#' || name_id"),
+    )
+    rank = Column(Integer, nullable=False)
+    x_power = Column(Float, nullable=False)
+    weapon_id = Column(Integer, nullable=False)
+    nameplate_id = Column(Integer, nullable=False)
+    byname = Column(String, nullable=False)
+    text_color = Column(String, nullable=False)
+    badge_left_id = Column(Integer)
+    badge_center_id = Column(Integer)
+    badge_right_id = Column(Integer)
+    timestamp = Column(DateTime(timezone=True), primary_key=True)
+    mode = Column(
+        ENUM(
+            "Splat Zones",
+            "Clam Blitz",
+            "Rainmaker",
+            "Tower Control",
+            name="mode_name",
+        )
+    )
+    region = Column(Boolean, nullable=False)
+    rotation_start = Column(DateTime(timezone=True))
+    season_number = Column(Integer)
+    last_seen = Column(DateTime(timezone=True), default=dt.datetime.utcnow)
 
     __table_args__ = (
-        UniqueConstraint(
-            "timestamp",
-            "id",
-            "mode",
-            name="timestamp_id_mode_unique",
-        ),
+        Index("idx_players_splashtag", "splashtag"),
+        Index("idx_players_timestamp", "timestamp"),
+        Index("idx_players_mode", "mode"),
+        Index("idx_players_region", "region"),
+        Index("idx_players_rotation_start", "rotation_start"),
+        Index("idx_players_season_number", "season_number"),
+        {"schema": "xscraper"},
     )
-
-    name_name_id_idx = Index("name_name_id_idx", name, name_id)
-    snapshot_idx = Index("snapshot_idx", timestamp, region, mode)

@@ -17,6 +17,7 @@ def parse_player_data(data: QueryResponse) -> Player:
         id=base64_decode(data["id"]).split(":")[-1],
         name=data["name"],
         name_id=data["nameId"],
+        rank=data["rank"],
         x_power=data["xPower"],
         weapon_id=int(base64_decode(data["weapon", "id"]).split("-")[-1]),
         nameplate_id=int(
@@ -36,8 +37,8 @@ def parse_player_data(data: QueryResponse) -> Player:
 
 def parse_players_in_mode(data: QueryResponse, mode: str) -> list[Player]:
     players = []
-    for player_node in data["edges"]:
-        player_data = parse_player_data(player_node["node"])
+    for i, player_node in enumerate(data["edges"]):
+        player_data = parse_player_data(player_node["node"], i + 1)
         player_data["mode"] = mode
         players.append(player_data)
     return players

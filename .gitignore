@@ -172,3 +172,9 @@ reports/flake8/*.css
 # Data Zipcaster files
 config.ini
 *.txt
+
+# Terraform
+terraform/modules/prod/*.tfvars
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
