@@ -173,10 +173,5 @@ reports/flake8/*.css
 config.ini
 *.txt
 
-# Terraform
-terraform/modules/prod/*.tfvars
-*.tfstate
-*.tfstate.backup
-.terraform.lock.hcl
-.terraform/
-terraform/prod.tfvars
+# Dev scripts
+!setup_dev_db.sh
