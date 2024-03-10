@@ -1,14 +1,15 @@
 variable "db_name" {
+  description = "Name of the PostgreSQL database for production"
   type        = string
-  description = "Name of the PostgreSQL database"
 }
 
 variable "db_user" {
+  description = "Username for the PostgreSQL database in production"
   type        = string
-  description = "Username for the PostgreSQL database"
 }
 
 variable "db_password" {
+  description = "Password for the PostgreSQL database in production"
   type        = string
-  description = "Password for the PostgreSQL database"
+  sensitive   = true
 }
