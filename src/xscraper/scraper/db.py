@@ -3,7 +3,7 @@ import os
 import psycopg2
 from psycopg2.extras import execute_values
 
-from xscraper.scraper.sql import INSERT_PLAYER_QUERY
+from xscraper.scraper.sql import INSERT_PLAYER_QUERY, INSERT_SCHEDULE_QUERY
 from xscraper.scraper.types import Player, Schedule
 
 
@@ -47,3 +47,22 @@ def insert_players(players: list[Player]) -> None:
                 for player in players
             ]
             execute_values(cursor, INSERT_PLAYER_QUERY, values)
+
+
+def insert_schedule(schedules: list[Schedule]) -> None:
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            values = [
+                (
+                    schedule["start_time"],
+                    schedule["end_time"],
+                    schedule["splatfest"],
+                    schedule.get("mode"),
+                    schedule.get("stage_1_id"),
+                    schedule.get("stage_1_name"),
+                    schedule.get("stage_2_id"),
+                    schedule.get("stage_2_name"),
+                )
+                for schedule in schedules
+            ]
+            execute_values(cursor, INSERT_SCHEDULE_QUERY, values)
