@@ -1,11 +1,13 @@
 ENSURE_SCHEMA_QUERY = "CREATE SCHEMA IF NOT EXISTS xscraper"
 
+ENSURE_TRGM_EXTENSION_QUERY = "CREATE EXTENSION IF NOT EXISTS pg_trgm"
+
 ENSURE_PLAYER_TABLE_QUERY = (
     "CREATE TABLE IF NOT EXISTS xscraper.players ("
     "player_id TEXT PRIMARY KEY, "
     "name TEXT NOT NULL, "
     "name_id TEXT NOT NULL, "
-    "splashtag TEXT UNIQUE NOT NULL DEFAULT (name || '#' || name_id), "
+    "splashtag TEXT UNIQUE NOT NULL, "
     "rank INTEGER NOT NULL, "
     "x_power FLOAT NOT NULL, "
     "weapon_id INTEGER NOT NULL, "
@@ -19,18 +21,21 @@ ENSURE_PLAYER_TABLE_QUERY = (
     "region BOOLEAN NOT NULL, "
     "rotation_start TIMESTAMP WITH TIME ZONE, "
     "season_number INTEGER, "
-    "last_seen TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, "
     "CONSTRAINT pk_player_timestamp UNIQUE (player_id, timestamp, mode)"
     ")"
 )
 
 CREATE_MODE_ENUM_QUERY = (
+    "DO $$ BEGIN "
+    "IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'mode_name') THEN "
     "CREATE TYPE xscraper.mode_name AS ENUM ("
     "'Splat Zones',"
     "'Clam Blitz',"
     "'Rainmaker',"
     "'Tower Control'"
-    ")"
+    "); "
+    "END IF; "
+    "END $$"
 )
 
 ENSURE_PLAYER_INDEX_SPLASHTAG_QUERY = (
@@ -85,7 +90,7 @@ ENSURE_SCHEDULE_TABLE_QUERY = (
     "mode xscraper.mode_name, "
     "stage_1_id INTEGER, "
     "stage_1_name TEXT, "
-    "stage_2_id INTEGER "
+    "stage_2_id INTEGER, "
     "stage_2_name TEXT, "
     "CONSTRAINT sc_start_time_end_time UNIQUE (start_time, end_time)"
     ")"

@@ -6,21 +6,23 @@ from typing import TYPE_CHECKING
 import psycopg2
 from psycopg2.extras import execute_values
 
-from xscraper.scraper.sql.ensure import (
+from xscraper.scraper.types import Player, Schedule
+from xscraper.sql.ensure import (
     ENSURE_PLAYER_INDEX_QUERIES,
     ENSURE_PLAYER_TABLE_QUERY,
     ENSURE_SCHEDULE_TABLE_QUERY,
+    ENSURE_SCHEMA_QUERY,
+    CREATE_MODE_ENUM_QUERY,
+    ENSURE_TRGM_EXTENSION_QUERY,
 )
-from xscraper.scraper.sql.insert import (
-    INSERT_PLAYER_QUERY,
-    INSERT_SCHEDULE_QUERY,
-)
-from xscraper.scraper.sql.select import (
+from xscraper.sql.insert import INSERT_PLAYER_QUERY, INSERT_SCHEDULE_QUERY
+from xscraper.sql.select import (
     SELECT_CURRENT_SCHEDULE_QUERY,
     SELECT_MAX_TIMESTAMP_AND_MODE_QUERY,
     SELECT_PREVIOUS_SCHEDULE_QUERY,
 )
-from xscraper.scraper.types import Player, Schedule
+from xscraper.sql.triggers import TRIGGER_SPLASHTAG_QUERY
+from xscraper.sql.functions import FUNCTION_SPLASHTAG_QUERY
 
 if TYPE_CHECKING:
     from psycopg2.extensions import connection as Connection
@@ -105,9 +107,22 @@ def select_latest_timestamp(conn: Connection) -> str:
         return cursor.fetchone()
 
 
+def ensure_schema_exists(conn: Connection) -> None:
+    with conn.cursor() as cursor:
+        cursor.execute(ENSURE_SCHEMA_QUERY)
+        cursor.execute(CREATE_MODE_ENUM_QUERY)
+        cursor.execute(ENSURE_TRGM_EXTENSION_QUERY)
+        conn.commit()
+
+
 def ensure_players_table_exists(conn: Connection) -> None:
     with conn.cursor() as cursor:
         cursor.execute(ENSURE_PLAYER_TABLE_QUERY)
+        cursor.execute(FUNCTION_SPLASHTAG_QUERY)
+        try:
+            cursor.execute(TRIGGER_SPLASHTAG_QUERY)
+        except psycopg2.errors.DuplicateObject:
+            pass
         for query in ENSURE_PLAYER_INDEX_QUERIES:
             cursor.execute(query)
         conn.commit()

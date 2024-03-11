@@ -35,6 +35,7 @@ def scrape(scraper: QueryHandler) -> list[Player]:
     timestamp = utc_tz.localize(dt.datetime.now())
     players: list[Player] = []
     conn = get_db_connection()
+    modes_to_update = calculate_modes_to_update(timestamp, conn)
 
 
 def main() -> None:
