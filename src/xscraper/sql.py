@@ -55,8 +55,8 @@ class Player(Base):
     x_power = Column(Float, nullable=False)
     weapon_id = Column(Integer, nullable=False)
     nameplate_id = Column(Integer, nullable=False)
-    byname = Column(String, nullable=False)
-    text_color = Column(String, nullable=False)
+    byname = Column(String)
+    text_color = Column(String)
     badge_left_id = Column(Integer)
     badge_center_id = Column(Integer)
     badge_right_id = Column(Integer)
@@ -82,5 +82,11 @@ class Player(Base):
         Index("idx_players_region", "region"),
         Index("idx_players_rotation_start", "rotation_start"),
         Index("idx_players_season_number", "season_number"),
+        Index(
+            "idx_players_mode_timestamp_season_number",
+            "mode",
+            "timestamp",
+            "season_number",
+        ),
         {"schema": "xscraper"},
     )

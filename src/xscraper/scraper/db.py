@@ -6,9 +6,16 @@ from typing import TYPE_CHECKING
 import psycopg2
 from psycopg2.extras import execute_values
 
-from xscraper.scraper.sql import (
+from xscraper.scraper.sql.ensure import (
+    ENSURE_PLAYER_INDEX_QUERIES,
+    ENSURE_PLAYER_TABLE_QUERY,
+    ENSURE_SCHEDULE_TABLE_QUERY,
+)
+from xscraper.scraper.sql.insert import (
     INSERT_PLAYER_QUERY,
     INSERT_SCHEDULE_QUERY,
+)
+from xscraper.scraper.sql.select import (
     SELECT_CURRENT_SCHEDULE_QUERY,
     SELECT_MAX_TIMESTAMP_AND_MODE_QUERY,
     SELECT_PREVIOUS_SCHEDULE_QUERY,
@@ -29,8 +36,8 @@ def get_db_credentials() -> dict[str, str]:
     }
 
 
-def get_db_connection() -> Connection:
-    return psycopg2.connect(**get_db_credentials())
+def get_db_connection(**kwargs) -> Connection:
+    return psycopg2.connect(**get_db_credentials(), **kwargs)
 
 
 def insert_players(conn: Connection, players: list[Player]) -> None:
@@ -78,7 +85,7 @@ def insert_schedule(conn: Connection, schedules: list[Schedule]) -> None:
         execute_values(cursor, INSERT_SCHEDULE_QUERY, values)
 
 
-def get_schedule(conn: Connection, previous: bool = False) -> Schedule:
+def select_schedule(conn: Connection, previous: bool = False) -> Schedule:
     query = (
         SELECT_PREVIOUS_SCHEDULE_QUERY
         if previous
@@ -92,7 +99,23 @@ def get_schedule(conn: Connection, previous: bool = False) -> Schedule:
         return Schedule(*value)
 
 
-def get_latest_timestamp(conn: Connection) -> str:
+def select_latest_timestamp(conn: Connection) -> str:
     with conn.cursor() as cursor:
         cursor.execute(SELECT_MAX_TIMESTAMP_AND_MODE_QUERY)
         return cursor.fetchone()
+
+
+def ensure_players_table_exists(conn: Connection) -> None:
+    with conn.cursor() as cursor:
+        cursor.execute(ENSURE_PLAYER_TABLE_QUERY)
+        for query in ENSURE_PLAYER_INDEX_QUERIES:
+            cursor.execute(query)
+        conn.commit()
+
+
+def ensure_schedule_table_exists(conn: Connection) -> None:
+    with conn.cursor() as cursor:
+        cursor.execute(ENSURE_SCHEDULE_TABLE_QUERY)
+        for query in ENSURE_PLAYER_INDEX_QUERIES:
+            cursor.execute(query)
+        conn.commit()
