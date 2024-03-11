@@ -3,7 +3,13 @@ import os
 import psycopg2
 from psycopg2.extras import execute_values
 
-from xscraper.scraper.sql import INSERT_PLAYER_QUERY, INSERT_SCHEDULE_QUERY
+from xscraper.scraper.sql import (
+    INSERT_PLAYER_QUERY,
+    INSERT_SCHEDULE_QUERY,
+    SELECT_CURRENT_SCHEDULE_QUERY,
+    SELECT_PREVIOUS_SCHEDULE_QUERY,
+    SELECT_MAX_TIMESTAMP_AND_MODE_QUERY,
+)
 from xscraper.scraper.types import Player, Schedule
 
 
@@ -66,3 +72,25 @@ def insert_schedule(schedules: list[Schedule]) -> None:
                 for schedule in schedules
             ]
             execute_values(cursor, INSERT_SCHEDULE_QUERY, values)
+
+
+def get_schedule(previous: bool = False) -> Schedule:
+    query = (
+        SELECT_PREVIOUS_SCHEDULE_QUERY
+        if previous
+        else SELECT_CURRENT_SCHEDULE_QUERY
+    )
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(query)
+            value = cursor.fetchone()
+            if value is None:
+                return None
+            return Schedule(*value)
+
+
+def get_latest_timestamp() -> str:
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(SELECT_MAX_TIMESTAMP_AND_MODE_QUERY)
+            return cursor.fetchone()

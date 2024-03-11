@@ -31,3 +31,10 @@ SELECT_PREVIOUS_SCHEDULE_QUERY = (
     "ORDER BY end_time DESC "
     "LIMIT 1"
 )
+
+SELECT_MAX_TIMESTAMP_AND_MODE_QUERY = (
+    "SELECT timestamp, mode "
+    "FROM xscraper.players "
+    "ORDER BY timestamp DESC "
+    "LIMIT 1"
+)
