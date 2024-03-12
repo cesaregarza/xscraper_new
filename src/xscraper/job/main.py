@@ -1,6 +1,7 @@
 import datetime as dt
 import time
 
+from dotenv import load_dotenv
 from psycopg2.extensions import connection as Connection
 from splatnet3_scraper.query import QueryHandler
 
@@ -10,6 +11,7 @@ from xscraper.scraper.main import scrape
 
 
 def job(conn: Connection | None = None) -> None:
+    load_dotenv()
     scrapers = load_scrapers()
     num_scrapers = len(scrapers)
 
