@@ -4,7 +4,7 @@ import pytz
 from splatnet3_scraper.query import QueryResponse
 
 from xscraper import constants as xc
-from xscraper.scraper.types import Player, Schedule
+from xscraper.types import Player, Schedule
 from xscraper.scraper.utils import base64_decode, color_floats_to_hex
 
 

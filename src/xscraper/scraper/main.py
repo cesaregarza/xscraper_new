@@ -16,7 +16,7 @@ from xscraper.scraper.db import (
     select_schedule,
 )
 from xscraper.scraper.scrape import get_schedule, scrape_all_players_in_mode
-from xscraper.scraper.types import Player, Schedule
+from xscraper.types import Player, Schedule
 from xscraper.scraper.utils import (
     calculate_season_number,
     get_current_rotation_start,

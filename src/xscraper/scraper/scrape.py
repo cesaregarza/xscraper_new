@@ -5,7 +5,7 @@ from splatnet3_scraper.query import QueryHandler, QueryResponse
 
 from xscraper import constants as xc
 from xscraper.scraper.parse import parse_players_in_mode, parse_schedule
-from xscraper.scraper.types import Player, Schedule
+from xscraper.types import Player, Schedule
 from xscraper.scraper.utils import calculate_season_number
 from xscraper.types import Mode, Region
 

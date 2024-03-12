@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import psycopg2
 from psycopg2.extras import execute_values
 
-from xscraper.scraper.types import Player, Schedule
+from xscraper.types import Player, Schedule
 from xscraper.sql.ensure import (
     CREATE_MODE_ENUM_QUERY,
     ENSURE_PLAYER_INDEX_QUERIES,
