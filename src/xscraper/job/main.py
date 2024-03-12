@@ -1,15 +1,15 @@
 import datetime as dt
 import time
 
+from psycopg2.extensions import connection as Connection
 from splatnet3_scraper.query import QueryHandler
 
-import xscraper.constants as xc
 import xscraper.variables as xv
 from xscraper.job.utils import load_scrapers
 from xscraper.scraper.main import scrape
 
 
-def job() -> None:
+def job(conn: Connection | None = None) -> None:
     scrapers = load_scrapers()
     num_scrapers = len(scrapers)
 
@@ -26,5 +26,9 @@ def job() -> None:
             idx = 0
         now = dt.datetime.now()
         if now.minute % scrape_cadence == scrape_offset:
-            scrape(scraper)
+            scrape(scraper, conn)
         time.sleep(60 - dt.datetime.now().second)
+
+
+if __name__ == "__main__":
+    job()
