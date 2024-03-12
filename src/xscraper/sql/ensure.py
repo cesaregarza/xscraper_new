@@ -11,6 +11,7 @@ ENSURE_PLAYER_TABLE_QUERY = (
     "rank INTEGER NOT NULL, "
     "x_power FLOAT NOT NULL, "
     "weapon_id INTEGER NOT NULL, "
+    "nameplate_id INTEGER, "
     "byname TEXT, "
     "text_color TEXT, "
     "badge_left_id INTEGER, "

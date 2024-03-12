@@ -37,8 +37,8 @@ def parse_player_data(data: QueryResponse) -> Player:
 
 def parse_players_in_mode(data: QueryResponse, mode: str) -> list[Player]:
     players = []
-    for i, player_node in enumerate(data["edges"]):
-        player_data = parse_player_data(player_node["node"], i + 1)
+    for player_node in data["edges"]:
+        player_data = parse_player_data(player_node["node"])
         player_data["mode"] = mode
         players.append(player_data)
     return players

@@ -4,19 +4,9 @@ import pytz
 from splatnet3_scraper.query import QueryHandler, QueryResponse
 
 from xscraper import constants as xc
-from xscraper.scraper.parse import (
-    parse_players_in_mode,
-    parse_schedule,
-    parse_time,
-)
+from xscraper.scraper.parse import parse_players_in_mode, parse_schedule
 from xscraper.scraper.types import Player, Schedule
-from xscraper.scraper.utils import (
-    base64_decode,
-    calculate_season_number,
-    color_floats_to_hex,
-    pull_previous_schedule,
-    round_down_nearest_rotation,
-)
+from xscraper.scraper.utils import calculate_season_number
 from xscraper.types import Mode, Region
 
 
@@ -88,7 +78,7 @@ def scrape_all_players_in_mode(
         )
         for player in players:
             player["timestamp"] = timestamp_insert
-            player["region"] = xc.region_map[region]
+            player["region"] = xc.region_map_bool[region]
             player["mode"] = xc.mode_map[mode]
             player["season_number"] = season_number
 

@@ -11,12 +11,14 @@ from splatnet3_scraper.query import QueryHandler
 from xscraper import constants as xc
 from xscraper.scraper.db import (
     get_db_connection,
+    insert_players,
     insert_schedule,
     select_schedule,
 )
 from xscraper.scraper.scrape import get_schedule, scrape_all_players_in_mode
 from xscraper.scraper.types import Player, Schedule
 from xscraper.scraper.utils import (
+    calculate_season_number,
     get_current_rotation_start,
     pull_previous_schedule,
 )
@@ -39,12 +41,31 @@ def scrape_schedule(scraper: QueryHandler, conn: Connection) -> None:
     insert_schedule(conn, schedules)
 
 
-def scrape(scraper: QueryHandler) -> list[Player]:
+def scrape(
+    scraper: QueryHandler, conn: Connection | None = None
+) -> list[Player]:
     utc_tz = pytz.timezone("UTC")
     timestamp = utc_tz.localize(dt.datetime.now())
     players: list[Player] = []
-    conn = get_db_connection()
+    if conn is None:
+        conn = get_db_connection()
     modes_to_update = calculate_modes_to_update(timestamp, conn)
+
+    if modes_to_update[0] is None:
+        scrape_schedule(scraper, conn)
+        modes_to_update = calculate_modes_to_update(timestamp, conn)
+
+    for schedule in modes_to_update:
+        mode = xc.mode_reverse_map[schedule["mode"]]
+        players_in_mode = scrape_all_players_in_mode(scraper, mode, timestamp)
+
+        for player in players_in_mode:
+            player["rotation_start"] = get_current_rotation_start()
+            player["season_number"] = calculate_season_number(timestamp)
+
+        players.extend(players_in_mode)
+
+    insert_players(conn, players)
 
 
 def main() -> None:

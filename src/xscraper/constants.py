@@ -30,6 +30,10 @@ region_map = {
     "ATLANTIC": "Tentatek",
     "PACIFIC": "Takoroka",
 }
+region_map_bool = {
+    "ATLANTIC": False,
+    "PACIFIC": True,
+}
 
 # Schedule Constants
 schedule_path = ("xSchedules", "nodes")
