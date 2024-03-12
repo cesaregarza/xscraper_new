@@ -9,7 +9,11 @@ from dotenv import load_dotenv
 from splatnet3_scraper.query import QueryHandler
 
 from xscraper import constants as xc
-from xscraper.scraper.db import get_db_connection, select_schedule
+from xscraper.scraper.db import (
+    get_db_connection,
+    insert_schedule,
+    select_schedule,
+)
 from xscraper.scraper.scrape import get_schedule, scrape_all_players_in_mode
 from xscraper.scraper.types import Player, Schedule
 from xscraper.scraper.utils import (
@@ -28,6 +32,11 @@ def calculate_modes_to_update(
     if pull_previous_schedule(timestamp):
         out.append(select_schedule(timestamp, True))
     return out
+
+
+def scrape_schedule(scraper: QueryHandler, conn: Connection) -> None:
+    schedules = get_schedule(scraper)
+    insert_schedule(conn, schedules)
 
 
 def scrape(scraper: QueryHandler) -> list[Player]:

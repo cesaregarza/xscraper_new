@@ -1,12 +1,12 @@
 SELECT_CURRENT_SCHEDULE_QUERY = (
-    "SELECT * FROM xscraper.schedule "
+    "SELECT * FROM xscraper.schedules "
     "WHERE start_time <= NOW() AND end_time > NOW() "
     "ORDER BY end_time DESC "
     "LIMIT 1"
 )
 
 SELECT_PREVIOUS_SCHEDULE_QUERY = (
-    "SELECT * FROM xscraper.schedule "
+    "SELECT * FROM xscraper.schedules "
     "WHERE end_time < NOW() "
     "ORDER BY end_time DESC "
     "LIMIT 1"

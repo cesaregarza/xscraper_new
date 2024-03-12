@@ -18,7 +18,7 @@ Base = declarative_base()
 
 
 class Schedule(Base):
-    __tablename__ = "schedule"
+    __tablename__ = "schedules"
 
     id = Column(Integer, primary_key=True)
     start_time = Column(DateTime(timezone=True), index=True)

@@ -10,7 +10,7 @@ INSERT_PLAYER_QUERY = (
 )
 
 INSERT_SCHEDULE_QUERY = (
-    "INSERT INTO xscraper.schedule ("
+    "INSERT INTO xscraper.schedules ("
     "start_time, end_time, splatfest, mode, stage_1_id, stage_1_name, "
     "stage_2_id, stage_2_name"
     ") "

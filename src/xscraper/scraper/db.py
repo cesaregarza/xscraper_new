@@ -8,13 +8,14 @@ from psycopg2.extras import execute_values
 
 from xscraper.scraper.types import Player, Schedule
 from xscraper.sql.ensure import (
+    CREATE_MODE_ENUM_QUERY,
     ENSURE_PLAYER_INDEX_QUERIES,
     ENSURE_PLAYER_TABLE_QUERY,
     ENSURE_SCHEDULE_TABLE_QUERY,
     ENSURE_SCHEMA_QUERY,
-    CREATE_MODE_ENUM_QUERY,
     ENSURE_TRGM_EXTENSION_QUERY,
 )
+from xscraper.sql.functions import FUNCTION_SPLASHTAG_QUERY
 from xscraper.sql.insert import INSERT_PLAYER_QUERY, INSERT_SCHEDULE_QUERY
 from xscraper.sql.select import (
     SELECT_CURRENT_SCHEDULE_QUERY,
@@ -22,7 +23,6 @@ from xscraper.sql.select import (
     SELECT_PREVIOUS_SCHEDULE_QUERY,
 )
 from xscraper.sql.triggers import TRIGGER_SPLASHTAG_QUERY
-from xscraper.sql.functions import FUNCTION_SPLASHTAG_QUERY
 
 if TYPE_CHECKING:
     from psycopg2.extensions import connection as Connection
@@ -67,6 +67,7 @@ def insert_players(conn: Connection, players: list[Player]) -> None:
             for player in players
         ]
         execute_values(cursor, INSERT_PLAYER_QUERY, values)
+        conn.commit()
 
 
 def insert_schedule(conn: Connection, schedules: list[Schedule]) -> None:
@@ -85,6 +86,7 @@ def insert_schedule(conn: Connection, schedules: list[Schedule]) -> None:
             for schedule in schedules
         ]
         execute_values(cursor, INSERT_SCHEDULE_QUERY, values)
+        conn.commit()
 
 
 def select_schedule(conn: Connection, previous: bool = False) -> Schedule:
@@ -96,9 +98,18 @@ def select_schedule(conn: Connection, previous: bool = False) -> Schedule:
     with conn.cursor() as cursor:
         cursor.execute(query)
         value = cursor.fetchone()
-        if value is None:
+        if value is None or len(value) == 0:
             return None
-        return Schedule(*value)
+        return Schedule(
+            start_time=value[0],
+            end_time=value[1],
+            splatfest=value[2],
+            mode=value[3],
+            stage_1_id=value[4],
+            stage_1_name=value[5],
+            stage_2_id=value[6],
+            stage_2_name=value[7],
+        )
 
 
 def select_latest_timestamp(conn: Connection) -> str:
@@ -119,10 +130,11 @@ def ensure_players_table_exists(conn: Connection) -> None:
     with conn.cursor() as cursor:
         cursor.execute(ENSURE_PLAYER_TABLE_QUERY)
         cursor.execute(FUNCTION_SPLASHTAG_QUERY)
+        conn.commit()
         try:
             cursor.execute(TRIGGER_SPLASHTAG_QUERY)
         except psycopg2.errors.DuplicateObject:
-            pass
+            conn.rollback()
         for query in ENSURE_PLAYER_INDEX_QUERIES:
             cursor.execute(query)
         conn.commit()
