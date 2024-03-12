@@ -174,4 +174,4 @@ config.ini
 *.txt
 
 # Dev scripts
-!setup_dev_db.sh
+!scripts/*.sh
