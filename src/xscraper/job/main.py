@@ -11,6 +11,12 @@ from xscraper.scraper.main import scrape
 
 
 def job(conn: Connection | None = None) -> None:
+    """The main job function that runs the scraping job.
+
+    Args:
+        conn (Connection | None): The database connection to use. If None, a new
+            connection will be created. Defaults to None.
+    """
     load_dotenv()
     scrapers = load_scrapers()
     num_scrapers = len(scrapers)

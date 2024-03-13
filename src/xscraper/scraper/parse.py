@@ -1,14 +1,27 @@
 import datetime as dt
+import logging
 
 import pytz
 from splatnet3_scraper.query import QueryResponse
 
 from xscraper import constants as xc
-from xscraper.types import Player, Schedule
 from xscraper.scraper.utils import base64_decode, color_floats_to_hex
+from xscraper.types import Player, Schedule
+
+logger = logging.getLogger(__name__)
 
 
 def parse_player_data(data: QueryResponse) -> Player:
+    """Parses the player data from the given QueryResponse object and returns a
+    Player object.
+
+    Args:
+        data (QueryResponse): The QueryResponse object containing the player
+            data.
+
+    Returns:
+        Player: The parsed Player object.
+    """
     badges = [
         int(base64_decode(badge["id"]).split("-")[-1]) if badge else None
         for badge in data["nameplate", "badges"]
@@ -36,6 +49,17 @@ def parse_player_data(data: QueryResponse) -> Player:
 
 
 def parse_players_in_mode(data: QueryResponse, mode: str) -> list[Player]:
+    """Parses the player data in a specific game mode.
+
+    Args:
+        data (QueryResponse): The response data containing player information.
+        mode (str): The game mode for which the players are being parsed.
+
+    Returns:
+        list[Player]: A list of Player objects containing the parsed player
+            data.
+    """
+    logger.info("Parsing players for mode %s", mode)
     players = []
     for player_node in data["edges"]:
         player_data = parse_player_data(player_node["node"])
@@ -45,12 +69,32 @@ def parse_players_in_mode(data: QueryResponse, mode: str) -> list[Player]:
 
 
 def parse_time(time: str) -> dt.datetime:
+    """Parses the given time string and returns a datetime object.
+
+    Args:
+        time (str): The time string to be parsed.
+
+    Returns:
+        dt.datetime: The parsed datetime object.
+    """
+    logger.info("Parsing time string %s", time)
     utc_tz = pytz.timezone("UTC")
     timestamp = dt.datetime.strptime(time, "%Y-%m-%dT%H:%M:%SZ")
     return utc_tz.localize(timestamp)
 
 
 def parse_schedule(data: QueryResponse) -> Schedule:
+    """Parses the schedule data from the given QueryResponse object and returns
+    a Schedule object.
+
+    Args:
+        data (QueryResponse): The QueryResponse object containing the schedule
+            data.
+
+    Returns:
+        Schedule: The parsed Schedule object.
+    """
+    logger.info("Parsing schedule data")
     responses = data[xc.schedule_path]
     schedule = []
     for response in responses:
