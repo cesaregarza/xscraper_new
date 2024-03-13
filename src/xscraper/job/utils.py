@@ -23,16 +23,13 @@ def load_scrapers() -> list[QueryHandler]:
             loaded scrapers.
     """
     scrapers = []
-    num_scrapers = int(os.getenv("NUM_SCRAPERS", 1))
-    logger.info("Loading %d scrapers", num_scrapers)
-    for i in range(num_scrapers):
+    for i in range(10):
         logger.debug("Loading scraper %d", i)
-        env_path = f"SCRAPER_{i}_PATH"
-        if (path := os.getenv(env_path)) is not None:
+        path = f"SCRAPER_{i}.ini"
+        if os.path.exists(path):
             scrapers.append(QueryHandler.from_config_file(path))
-        elif i == 0:
-            logger.error("No scrapers found. Please set at least one scraper.")
-            raise ValueError(
-                "No scrapers found. Please set at least one scraper."
-            )
+        else:
+            logger.warning("Path %s does not exist. Stopping", path)
+            break
+
     return scrapers

@@ -49,7 +49,7 @@ def calculate_modes_to_update(
     out = [select_schedule(connection)]
     if pull_previous_schedule(timestamp):
         logger.info("Pulling previous schedule")
-        out.append(select_schedule(timestamp, True))
+        out.append(select_schedule(connection, True))
     return out
 
 

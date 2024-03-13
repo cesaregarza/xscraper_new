@@ -20,24 +20,37 @@ def job(conn: Connection | None = None) -> None:
         conn (Connection | None): The database connection to use. If None, a new
             connection will be created. Defaults to None.
     """
+    logger.info("Starting the scraping job")
     load_dotenv()
+    logger.info("Loading the scrapers")
     scrapers = load_scrapers()
     num_scrapers = len(scrapers)
+    logger.info("Loaded %d scrapers", num_scrapers)
 
     def get_next_scraper(idx: int) -> QueryHandler:
+        logger.info("Loading scraper %d", idx % num_scrapers)
         return scrapers[idx % num_scrapers]
 
     scrape_cadence = xv.SCRAPE_CADENCE.total_seconds() / 60
     scrape_offset = xv.SCRAPE_OFFSET_MINUTES.total_seconds() / 60
     idx = 0
     while True:
+        now = dt.datetime.now()
+        if now.minute % scrape_cadence != scrape_offset:
+            logger.info("Cadence not met, sleeping for 60 seconds")
+            time.sleep(60)
+            continue
+        else:
+            logger.info("Cadence met, scraping")
+
         scraper = get_next_scraper(idx)
         idx += 1
         if idx % num_scrapers == 0:
             idx = 0
-        now = dt.datetime.now()
-        if now.minute % scrape_cadence == scrape_offset:
-            scrape(scraper, conn)
+        scrape(scraper, conn)
+
+        # Sleep until the next minute. It's done minute-by-minute to avoid
+        # any issues from extremely long delays.
         time.sleep(60 - dt.datetime.now().second)
 
 
