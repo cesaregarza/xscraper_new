@@ -1,4 +1,5 @@
 import datetime as dt
+import logging
 import time
 
 from dotenv import load_dotenv
@@ -8,6 +9,8 @@ from splatnet3_scraper.query import QueryHandler
 import xscraper.variables as xv
 from xscraper.job.utils import load_scrapers
 from xscraper.scraper.main import scrape
+
+logger = logging.getLogger(__name__)
 
 
 def job(conn: Connection | None = None) -> None:
@@ -36,6 +39,17 @@ def job(conn: Connection | None = None) -> None:
         if now.minute % scrape_cadence == scrape_offset:
             scrape(scraper, conn)
         time.sleep(60 - dt.datetime.now().second)
+
+
+def job_with_logging(conn: Connection | None = None) -> None:
+    """The main job function that runs the scraping job with logging.
+
+    Args:
+        conn (Connection | None): The database connection to use. If None, a new
+            connection will be created. Defaults to None.
+    """
+    logging.basicConfig(level=logging.INFO)
+    job(conn)
 
 
 if __name__ == "__main__":
