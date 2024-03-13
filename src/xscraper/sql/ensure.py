@@ -4,10 +4,10 @@ ENSURE_TRGM_EXTENSION_QUERY = "CREATE EXTENSION IF NOT EXISTS pg_trgm"
 
 ENSURE_PLAYER_TABLE_QUERY = (
     "CREATE TABLE IF NOT EXISTS xscraper.players ("
-    "player_id TEXT PRIMARY KEY, "
+    "player_id TEXT, "
     "name TEXT NOT NULL, "
     "name_id TEXT NOT NULL, "
-    "splashtag TEXT UNIQUE NOT NULL, "
+    "splashtag TEXT NOT NULL, "
     "rank INTEGER NOT NULL, "
     "x_power FLOAT NOT NULL, "
     "weapon_id INTEGER NOT NULL, "
@@ -22,7 +22,7 @@ ENSURE_PLAYER_TABLE_QUERY = (
     "region BOOLEAN NOT NULL, "
     "rotation_start TIMESTAMP WITH TIME ZONE, "
     "season_number INTEGER, "
-    "CONSTRAINT pk_player_timestamp UNIQUE (player_id, timestamp, mode)"
+    "CONSTRAINT pk_player_timestamp PRIMARY KEY (player_id, timestamp, mode)"
     ")"
 )
 
