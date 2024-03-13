@@ -1,7 +1,7 @@
 ###############################
 #         Base Image          #
 ###############################
-ARG BASE_IMAGE=python:3.10-slim
+ARG BASE_IMAGE=python:3.11-slim
 
 FROM $BASE_IMAGE AS base
 
