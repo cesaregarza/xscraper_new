@@ -73,6 +73,7 @@ class Player(Base):
     region = Column(Boolean, nullable=False)
     rotation_start = Column(DateTime(timezone=True))
     season_number = Column(Integer)
+    updated = Column(Boolean)
 
     __table_args__ = (
         Index("idx_players_splashtag", "splashtag"),

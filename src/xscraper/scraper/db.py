@@ -19,6 +19,7 @@ from xscraper.sql.functions import FUNCTION_SPLASHTAG_QUERY
 from xscraper.sql.insert import INSERT_PLAYER_QUERY, INSERT_SCHEDULE_QUERY
 from xscraper.sql.select import (
     SELECT_CURRENT_SCHEDULE_QUERY,
+    SELECT_LATEST_PLAYER_QUERY,
     SELECT_MAX_TIMESTAMP_AND_MODE_QUERY,
     SELECT_PREVIOUS_SCHEDULE_QUERY,
 )
@@ -95,6 +96,7 @@ def insert_players(conn: Connection, players: list[Player]) -> None:
                 player["region"],
                 player["rotation_start"],
                 player["season_number"],
+                player["updated"],
             )
             for player in players
         ]
@@ -184,6 +186,22 @@ def select_latest_timestamp(conn: Connection) -> str:
     with conn.cursor() as cursor:
         cursor.execute(SELECT_MAX_TIMESTAMP_AND_MODE_QUERY)
         return cursor.fetchone()
+
+
+def select_latest_players(conn: Connection, mode: str) -> list[Player]:
+    """Select the latest players from the database.
+
+    Args:
+        conn (Connection): The database connection to use.
+        mode (str): The mode to select the latest players for.
+
+    Returns:
+        list[Player]: The latest players from the database.
+    """
+    logger.debug("Selecting the latest players from the database")
+    with conn.cursor() as cursor:
+        cursor.execute(SELECT_LATEST_PLAYER_QUERY, (mode, mode))
+        return cursor.fetchall()
 
 
 def ensure_schema_exists(conn: Connection) -> None:

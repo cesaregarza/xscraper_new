@@ -22,6 +22,7 @@ ENSURE_PLAYER_TABLE_QUERY = (
     "region BOOLEAN NOT NULL, "
     "rotation_start TIMESTAMP WITH TIME ZONE, "
     "season_number INTEGER, "
+    "updated BOOLEAN, "
     "CONSTRAINT pk_player_timestamp PRIMARY KEY (player_id, timestamp, mode)"
     ")"
 )

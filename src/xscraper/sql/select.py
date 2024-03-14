@@ -18,3 +18,19 @@ SELECT_MAX_TIMESTAMP_AND_MODE_QUERY = (
     "ORDER BY timestamp DESC "
     "LIMIT 1"
 )
+
+SELECT_LATEST_PLAYER_QUERY = (
+    "WITH MaxTimestamp AS ("
+    "SELECT MAX(timestamp) AS max_timestamp "
+    "FROM xscraper.players "
+    "WHERE mode = %s "
+    "), "
+    "FilteredByTimestamp AS ("
+    "SELECT player_id, x_power, mode "
+    "FROM xscraper.players "
+    "WHERE timestamp = (SELECT max_timestamp FROM MaxTimestamp) "
+    ") "
+    "SELECT * "
+    "FROM FilteredByTimestamp "
+    "WHERE mode = %s; "
+)

@@ -34,10 +34,21 @@ def job(conn: Connection | None = None) -> None:
     scrape_cadence = xv.SCRAPE_CADENCE.total_seconds() / 60
     scrape_offset = xv.SCRAPE_OFFSET_MINUTES.total_seconds() / 60
     idx = 0
+    failed_count = 0
     while True:
         now = dt.datetime.now()
-        if now.minute % scrape_cadence != scrape_offset:
+        cadence_condition = now.minute % scrape_cadence == scrape_offset
+        if not cadence_condition and failed_count == 0:
             logger.info("Cadence not met, sleeping for 60 seconds")
+            time.sleep(60)
+            continue
+        elif not cadence_condition and failed_count < 2:
+            logger.info("Previous scrape failed, attempting again")
+        elif not cadence_condition and failed_count >= 2:
+            logger.error(
+                "Previous scrape failed too many times, sleeping for 60 seconds"
+            )
+            failed_count = 0
             time.sleep(60)
             continue
         else:
@@ -47,7 +58,12 @@ def job(conn: Connection | None = None) -> None:
         idx += 1
         if idx % num_scrapers == 0:
             idx = 0
-        scrape(scraper, conn)
+        try:
+            scrape(scraper, conn)
+            failed_count = 0
+        except Exception as e:
+            logger.error("Scraping failed: %s", e)
+            failed_count += 1
 
         # Sleep until the next minute. It's done minute-by-minute to avoid
         # any issues from extremely long delays.

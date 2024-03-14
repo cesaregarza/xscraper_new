@@ -27,6 +27,7 @@ class Player(TypedDict):
     region: NotRequired[RegionName]
     rotation_start: NotRequired[dt.datetime]
     season_number: NotRequired[int]
+    updated: NotRequired[bool]
 
 
 class Schedule(TypedDict):

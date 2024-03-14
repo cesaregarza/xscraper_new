@@ -14,6 +14,7 @@ from xscraper.scraper.db import (
     get_db_connection,
     insert_players,
     insert_schedule,
+    select_latest_players,
     select_schedule,
 )
 from xscraper.scraper.scrape import get_schedule, scrape_all_players_in_mode
@@ -95,11 +96,19 @@ def scrape(scraper: QueryHandler, conn: Connection | None = None) -> None:
         logger.info("Scraping players for mode %s", schedule["mode"])
         mode = xc.mode_reverse_map[schedule["mode"]]
         players_in_mode = scrape_all_players_in_mode(scraper, mode, timestamp)
+        latest_players = select_latest_players(conn, schedule["mode"])
+        player_dict = {player[0]: player for player in latest_players}
 
         logger.info("Appending rotation start and season number to player data")
         for player in players_in_mode:
             player["rotation_start"] = get_current_rotation_start()
             player["season_number"] = calculate_season_number(timestamp)
+            if player["id"] not in player_dict:
+                player["updated"] = True
+            else:
+                player["updated"] = (
+                    player["x_power"] != player_dict[player["id"]][1]
+                )
 
         players.extend(players_in_mode)
 
