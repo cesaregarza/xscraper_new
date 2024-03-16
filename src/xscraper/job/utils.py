@@ -1,5 +1,6 @@
 import logging
 import os
+from logging.handlers import RotatingFileHandler
 
 from splatnet3_scraper.query import QueryHandler
 
@@ -33,3 +34,38 @@ def load_scrapers() -> list[QueryHandler]:
             break
 
     return scrapers
+
+
+def setup_logger(
+    logger_name: str,
+    log_file_path: str,
+    max_bytes: int = 1024 * 1024,
+    backup_count: int = 5,
+    level: int = logging.INFO,
+) -> None:
+    """Sets up a logger that dumps to a new file every time the log file reaches
+    a certain size.
+
+    Args:
+        log_file_path (str): The path to the log file.
+        max_bytes (int, optional): The maximum size in bytes before the log file
+            is rotated. Defaults to 1MB (1024 * 1024).
+        backup_count (int, optional): The number of backup files to keep.
+            Defaults to 5.
+        level (int, optional): The logging level. Defaults to logging.INFO.
+    """
+    logger = logging.getLogger(logger_name)
+    logger.setLevel(level)
+
+    # Create a RotatingFileHandler
+    file_handler = RotatingFileHandler(
+        log_file_path, maxBytes=max_bytes, backupCount=backup_count
+    )
+    file_handler.setLevel(level)
+
+    # Create a formatter and add it to the file handler
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    file_handler.setFormatter(formatter)
+
+    # Add the file handler to the logger
+    logger.addHandler(file_handler)
