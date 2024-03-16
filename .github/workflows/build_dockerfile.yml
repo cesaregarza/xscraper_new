@@ -1,0 +1,192 @@
+name: Build Scraper
+
+on:
+  workflow_dispatch:
+    inputs:
+      override-check:
+        description: "Override check for changes"
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    environment: Scraper
+    outputs:
+      skip: ${{ steps.check_changes.outputs.skip }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.CI_XSCRAPER_TOKEN }}
+          fetch-depth: 0
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          echo "Checking for changes"
+          LATEST_TAG=$(git describe --tags --always `git rev-list --tags --max-count=1` 2>&1)
+          TAG_FETCH_EXIT_CODE=$?
+
+          if [ $TAG_FETCH_EXIT_CODE -ne 0 ]; then
+            echo "Failed to fetch latest tag, exit code: $TAG_FETCH_EXIT_CODE"
+            echo "skip=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No tags found, skipping"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "Latest tag: $LATEST_TAG"
+            CHANGES=$(git diff --name-only $LATEST_TAG HEAD -- 'src/')
+            if [ -n "$CHANGES" ]; then
+              echo "Changes found, running"
+              echo "skip=false" >> $GITHUB_OUTPUT
+            else
+              echo "No changes found, skipping"
+              echo "skip=true" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+  build:
+    needs: check
+    if: (needs.check.outputs.skip == 'false') || (github.event.inputs.override-check == 'true')
+    runs-on: ubuntu-latest
+    environment: XScraper
+    outputs:
+      version: ${{ steps.calculate_version.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: main
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Install Docker
+        uses: docker/setup-buildx-action@v1
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Read .version file
+        id: semver
+        run: |
+          echo "version=$(cat .version)" >> $GITHUB_OUTPUT
+
+      - name: Get latest release
+        id: latest_release
+        run: |
+          LATEST_RELEASE=\
+          $(curl -sH "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          "https://api.github.com/repos/${{ github.repository }}/releases/latest" \
+          | jq -r '.tag_name')
+          echo "release=${LATEST_RELEASE}" >> $GITHUB_OUTPUT
+          echo "Latest Release: ${LATEST_RELEASE}"
+
+      - name: Calculate next version
+        id: calculate_version
+        run: |
+          LATEST_RELEASE=${{ steps.latest_release.outputs.release }}
+          BASE_VERSION=${{ steps.semver.outputs.version }}
+          CLEANED_LATEST_RELEASE=${LATEST_RELEASE#v}
+
+          echo "Latest Release without v: ${CLEANED_LATEST_RELEASE}"
+          echo "Base Version: ${BASE_VERSION}"
+
+          BASE_MAJOR=$(echo ${BASE_VERSION} | cut -d. -f1)
+          BASE_MINOR=$(echo ${BASE_VERSION} | cut -d. -f2)
+          BASE_PATCH=$(echo ${BASE_VERSION} | cut -d. -f3)
+
+          LATEST_MAJOR=$(echo ${CLEANED_LATEST_RELEASE} | cut -d. -f1)
+          LATEST_MINOR=$(echo ${CLEANED_LATEST_RELEASE} | cut -d. -f2)
+          LATEST_PATCH=$(echo ${CLEANED_LATEST_RELEASE} | cut -d. -f3)
+
+          if [[ $BASE_MAJOR -gt $LATEST_MAJOR ]] || \
+              [[ $BASE_MAJOR -eq $LATEST_MAJOR && \
+                  $BASE_MINOR -gt $LATEST_MINOR ]] || \
+              [[ $BASE_MAJOR -eq $LATEST_MAJOR && \
+                  $BASE_MINOR -eq $LATEST_MINOR && \
+                  $BASE_PATCH -gt $LATEST_PATCH ]]; then
+              echo "Base Version is greater than Latest Release"
+              NEXT_VERSION=${BASE_VERSION}
+          else
+              echo "Base Version is less or equal to Latest Release"
+              LATEST_PATCH=$((LATEST_PATCH + 1))
+              NEXT_VERSION="${LATEST_MAJOR}.${LATEST_MINOR}.${LATEST_PATCH}"
+          fi
+
+          echo "Next Version: ${NEXT_VERSION}"
+          echo "version=${NEXT_VERSION}" >> $GITHUB_OUTPUT
+    
+      - name: Create .env file from secrets
+        run: |
+          echo "POSTGRES_NAME=${{ secrets.POSTGRES_NAME }}" >> .env
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+          echo "POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}" >> .env
+          echo "POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}" >> .env
+
+      - name: Build docker image
+        run: |
+          echo "Version: ${{ steps.semver.outputs.version }}"
+          docker build \
+          --build-arg BUILD_VERSION=${{ steps.calculate_version.outputs.version }} \
+          --build-arg TOKENS=${{ secrets.SESSION_TOKENS }} \
+          --build-arg ENV_FILE=.env \
+          .
+
+      - name: Authenticate to DigitalOcean Container Registry
+        run: doctl registry login --expiry-seconds 300
+
+      - name: Tag docker image
+        run: |
+          docker tag xscraper:latest registry.digitalocean.com/sendouq/xscraper:latest
+
+      - name: Push docker image
+        run: |
+          docker push registry.digitalocean.com/sendouq/xscraper:latest
+
+      - name: Garbage collect
+        run: |
+          docker system prune -f
+
+      - name: Create Release
+        if: success()
+        run: |
+          LATEST_RELEASE=${{ steps.latest_release.outputs.release }}
+          NEXT_VERSION=${{ steps.calculate_version.outputs.version }}
+          echo "Latest Release: ${LATEST_RELEASE}"
+          echo "Next Version: v${NEXT_VERSION}"
+          if [[ $NEXT_VERSION != $LATEST_RELEASE ]]; then
+              echo "Creating Release"
+              git tag -a v$NEXT_VERSION -m "AUTO: Release v$NEXT_VERSION"
+              git push origin v$NEXT_VERSION
+          else
+              echo "No new release to create"
+          fi
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    if: success()
+
+    steps:
+      - name: Create release
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            tag: ${{ needs.build.outputs.version }}
+        run: |
+          gh release create v${{ env.tag }} \
+            --repo="$GITHUB_REPOSITORY" \
+            --title="${GITHUB_REPOSITORY#*/} v${{ env.tag }}" \
+            --generate-notes

@@ -1,5 +1,6 @@
 import logging
 import os
+import pathlib
 from logging.handlers import RotatingFileHandler
 
 from splatnet3_scraper.query import QueryHandler
@@ -56,6 +57,9 @@ def setup_logger(
     """
     logger = logging.getLogger(logger_name)
     logger.setLevel(level)
+
+    # Make sure the directory exists
+    pathlib.Path(log_file_path).parent.mkdir(parents=True, exist_ok=True)
 
     # Create a RotatingFileHandler
     file_handler = RotatingFileHandler(

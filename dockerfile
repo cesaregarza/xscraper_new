@@ -40,6 +40,9 @@ FROM dependencies AS build
 
 ARG BUILD_VERSION
 ARG TOKENS
+ARG ENV_FILE
+
+RUN if [ -n "$ENV_FILE" ]; then cp $ENV_FILE .env; fi
 
 COPY . /app/
 RUN chmod +x /app/scripts/write_scraper_ini.sh && \
