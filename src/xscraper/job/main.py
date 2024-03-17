@@ -44,7 +44,7 @@ def job(conn: Connection | None = None) -> None:
         cadence_condition = now.minute % scrape_cadence == scrape_offset
         if not cadence_condition and failed_count == 0:
             logger.info("Cadence not met, sleeping for 60 seconds")
-            time.sleep(60)
+            time.sleep(60 - now.second)
             continue
         elif not cadence_condition and failed_count < 2:
             logger.info("Previous scrape failed, attempting again")
