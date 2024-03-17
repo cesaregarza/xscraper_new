@@ -37,6 +37,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.scripts]
 xscraper = "xscraper.job.main:job"
 xscraper_with_logs = "xscraper.job.main:job_with_logging"
+setup_db = "xscraper.job.main:setup_db"
 
 [tool.black]
 line-length = 80

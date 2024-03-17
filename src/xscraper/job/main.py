@@ -8,6 +8,12 @@ from splatnet3_scraper.query import QueryHandler
 
 import xscraper.variables as xv
 from xscraper.job.utils import load_scrapers, setup_logger
+from xscraper.scraper.db import (
+    ensure_players_table_exists,
+    ensure_schedule_table_exists,
+    ensure_schema_exists,
+    get_db_connection,
+)
 from xscraper.scraper.main import scrape
 
 logger = logging.getLogger(__name__)
@@ -107,6 +113,23 @@ def job_with_logging(conn: Connection | None = None) -> None:
         raise e
     finally:
         logging.shutdown()
+
+
+def setup_db(conn: Connection | None = None) -> None:
+    """Sets up the database for the scraping job.
+
+    Args:
+        conn (Connection | None): The database connection to use. If None, a new
+            connection will be created. Defaults to None.
+    """
+    logger.info("Setting up the database")
+    load_dotenv()
+    if conn is None:
+        logger.debug("No database connection provided, creating a new one")
+        conn = get_db_connection()
+    ensure_schema_exists(conn)
+    ensure_schedule_table_exists(conn)
+    ensure_players_table_exists(conn)
 
 
 if __name__ == "__main__":
