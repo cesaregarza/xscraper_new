@@ -2,11 +2,9 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
-import os
 from typing import TYPE_CHECKING
 
 import pytz
-from dotenv import load_dotenv
 from splatnet3_scraper.query import QueryHandler
 
 from xscraper import constants as xc
@@ -96,6 +94,7 @@ def scrape(scraper: QueryHandler, conn: Connection | None = None) -> None:
         logger.info("Scraping players for mode %s", schedule["mode"])
         mode = xc.mode_reverse_map[schedule["mode"]]
         players_in_mode = scrape_all_players_in_mode(scraper, mode, timestamp)
+        logger.info("Selecting the latest players from the database")
         latest_players = select_latest_players(conn, schedule["mode"])
         player_dict = {player[0]: player for player in latest_players}
 
@@ -114,10 +113,3 @@ def scrape(scraper: QueryHandler, conn: Connection | None = None) -> None:
 
     logger.info("Inserting players into the database")
     insert_players(conn, players)
-
-
-def main() -> None:
-    """The main function for the scraper."""
-    load_dotenv()
-    SCRAPER_CONFIG_PATH = os.getenv("SCRAPER_CONFIG_PATH")
-    scraper = QueryHandler.from_config_file(SCRAPER_CONFIG_PATH)
