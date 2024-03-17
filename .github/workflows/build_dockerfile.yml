@@ -127,7 +127,7 @@ jobs:
 
           echo "Next Version: ${NEXT_VERSION}"
           echo "version=${NEXT_VERSION}" >> $GITHUB_OUTPUT
-    
+
       - name: Create .env file from secrets
         run: |
           echo "POSTGRES_NAME=${{ secrets.POSTGRES_NAME }}" >> .env
@@ -156,10 +156,6 @@ jobs:
         run: |
           docker push registry.digitalocean.com/sendouq/xscraper:latest
 
-      - name: Garbage collect
-        run: |
-          docker system prune -f
-
       - name: Create Release
         if: success()
         run: |
@@ -183,8 +179,8 @@ jobs:
     steps:
       - name: Create release
         env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            tag: ${{ needs.build.outputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ needs.build.outputs.version }}
         run: |
           gh release create v${{ env.tag }} \
             --repo="$GITHUB_REPOSITORY" \
