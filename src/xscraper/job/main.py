@@ -128,8 +128,8 @@ def setup_db(conn: Connection | None = None) -> None:
         logger.debug("No database connection provided, creating a new one")
         conn = get_db_connection()
     ensure_schema_exists(conn)
-    ensure_schedule_table_exists(conn)
     ensure_players_table_exists(conn)
+    ensure_schedule_table_exists(conn)
 
 
 if __name__ == "__main__":
