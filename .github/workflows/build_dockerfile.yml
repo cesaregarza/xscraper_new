@@ -135,10 +135,13 @@ jobs:
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
           echo "POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}" >> .env
           echo "POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}" >> .env
+          ls -la # debug
 
       - name: Build docker image
         run: |
           echo "Version: ${{ steps.semver.outputs.version }}"
+          pwd # debug
+          ls -la # debug
           docker build \
           --tag xscraper:latest \
           --build-arg BUILD_VERSION=${{ steps.calculate_version.outputs.version }} \
