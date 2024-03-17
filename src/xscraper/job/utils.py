@@ -38,7 +38,6 @@ def load_scrapers() -> list[QueryHandler]:
 
 
 def setup_logger(
-    logger_name: str,
     log_file_path: str,
     max_bytes: int = 1024 * 1024,
     backup_count: int = 5,
@@ -55,8 +54,8 @@ def setup_logger(
             Defaults to 5.
         level (int, optional): The logging level. Defaults to logging.INFO.
     """
-    logger = logging.getLogger(logger_name)
-    logger.setLevel(level)
+    root_logger = logging.getLogger()
+    root_logger.setLevel(level)
 
     # Make sure the directory exists
     pathlib.Path(log_file_path).parent.mkdir(parents=True, exist_ok=True)
@@ -67,9 +66,15 @@ def setup_logger(
     )
     file_handler.setLevel(level)
 
-    # Create a formatter and add it to the file handler
+    # Create a StreamHandler
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(level)
+
+    # Create a formatter and add it to the handlers
     formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
     file_handler.setFormatter(formatter)
+    stream_handler.setFormatter(formatter)
 
-    # Add the file handler to the logger
-    logger.addHandler(file_handler)
+    # Add the handlers to the root logger
+    root_logger.addHandler(file_handler)
+    root_logger.addHandler(stream_handler)

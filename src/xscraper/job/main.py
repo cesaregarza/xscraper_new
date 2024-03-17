@@ -10,6 +10,8 @@ import xscraper.variables as xv
 from xscraper.job.utils import load_scrapers, setup_logger
 from xscraper.scraper.main import scrape
 
+logger = logging.getLogger(__name__)
+
 
 def job(conn: Connection | None = None) -> None:
     """The main job function that runs the scraping job.
@@ -18,7 +20,6 @@ def job(conn: Connection | None = None) -> None:
         conn (Connection | None): The database connection to use. If None, a new
             connection will be created. Defaults to None.
     """
-    logger = logging.getLogger(__name__)
     logger.info("Starting the scraping job")
     load_dotenv()
     logger.info("Loading the scrapers")
@@ -62,10 +63,12 @@ def job(conn: Connection | None = None) -> None:
         if idx % num_scrapers == 0:
             idx = 0
         try:
+            logger.info("Scraping with scraper %s", scraper)
             scrape(scraper, conn)
             failed_count = 0
             last_100_failures.pop(0)
             last_100_failures.append(0)
+            logger.info("Scraping successful")
         except Exception as e:
             logger.error("Scraping failed: %s", e)
             failed_count += 1
@@ -93,7 +96,6 @@ def job_with_logging(conn: Connection | None = None) -> None:
             connection will be created. Defaults to None.
     """
     setup_logger(
-        __name__,
         xv.LOG_FILE_PATH,
         max_bytes=xv.LOG_MAX_BYTES,
         backup_count=xv.LOG_BACKUP_COUNT,
