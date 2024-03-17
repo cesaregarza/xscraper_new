@@ -140,13 +140,10 @@ jobs:
       - name: Build docker image
         run: |
           echo "Version: ${{ steps.semver.outputs.version }}"
-          pwd # debug
-          ls -la # debug
           docker build \
           --tag xscraper:latest \
           --build-arg BUILD_VERSION=${{ steps.calculate_version.outputs.version }} \
           --build-arg TOKENS="${{ secrets.SESSION_TOKENS }}" \
-          --build-arg ENV_FILE=.env \
           .
 
       - name: Authenticate to DigitalOcean Container Registry
