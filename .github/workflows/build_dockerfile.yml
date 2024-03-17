@@ -139,10 +139,10 @@ jobs:
       - name: Build docker image
         run: |
           echo "Version: ${{ steps.semver.outputs.version }}"
-          export TOKENS=${{ secrets.SESSION_TOKENS }}
           docker build \
+          --tag xscraper:latest \
           --build-arg BUILD_VERSION=${{ steps.calculate_version.outputs.version }} \
-          --build-arg TOKENS=${TOKENS} \
+          --build-arg TOKENS="${{ secrets.SESSION_TOKENS }}" \
           --build-arg ENV_FILE=.env \
           .
 
