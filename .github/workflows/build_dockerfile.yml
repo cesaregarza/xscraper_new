@@ -12,7 +12,7 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
-    environment: Scraper
+    environment: XScraper
     outputs:
       skip: ${{ steps.check_changes.outputs.skip }}
 
