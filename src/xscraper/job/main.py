@@ -2,9 +2,9 @@ import datetime as dt
 import logging
 import time
 
+import sentry_sdk
 from dotenv import load_dotenv
 from psycopg2.extensions import connection as Connection
-import sentry_sdk
 from splatnet3_scraper.query import QueryHandler
 
 import xscraper.variables as xv
