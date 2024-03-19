@@ -145,6 +145,7 @@ jobs:
           --tag xscraper:latest \
           --build-arg BUILD_VERSION=${{ steps.calculate_version.outputs.version }} \
           --build-arg TOKENS="${{ secrets.SESSION_TOKENS }}" \
+          --build-arg SENTRY_DSN="${{ secrets.SENTRY_DSN }}" \
           .
 
       - name: Authenticate to DigitalOcean Container Registry

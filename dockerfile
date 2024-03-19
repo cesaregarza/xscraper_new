@@ -41,12 +41,15 @@ FROM dependencies AS build
 ARG BUILD_VERSION
 ARG TOKENS
 ARG ENV_FILE
+ARG SENTRY_DSN
 
 RUN if [ -n "$ENV_FILE" ]; then cp $ENV_FILE .env; fi
 
 COPY . /app/
 RUN chmod +x /app/scripts/write_scraper_ini.sh && \
     /app/scripts/write_scraper_ini.sh $TOKENS
+
+ENV SENTRY_DSN=$SENTRY_DSN
 
 # Build the application
 RUN poetry version $BUILD_VERSION && \

@@ -3,6 +3,7 @@ import os
 import pathlib
 from logging.handlers import RotatingFileHandler
 
+import sentry_sdk
 from splatnet3_scraper.query import QueryHandler
 
 logger = logging.getLogger(__name__)
@@ -78,3 +79,8 @@ def setup_logger(
     # Add the handlers to the root logger
     root_logger.addHandler(file_handler)
     root_logger.addHandler(stream_handler)
+
+    # Set up Sentry
+    sentry_sdk.init(
+        dsn=os.getenv("SENTRY_DSN"),
+    )

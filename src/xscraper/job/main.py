@@ -4,6 +4,7 @@ import time
 
 from dotenv import load_dotenv
 from psycopg2.extensions import connection as Connection
+import sentry_sdk
 from splatnet3_scraper.query import QueryHandler
 
 import xscraper.variables as xv
@@ -54,11 +55,19 @@ def job(conn: Connection | None = None) -> None:
             continue
         elif not cadence_condition and failed_count < 2:
             logger.info("Previous scrape failed, attempting again")
+            sentry_sdk.capture_message(
+                "Previous scrape failed, attempting again. ",
+                level="warning",
+            )
         elif not cadence_condition and failed_count >= 2:
             logger.error(
                 "Previous scrape failed too many times, sleeping for 60 seconds"
             )
             failed_count = 0
+            sentry_sdk.capture_message(
+                "Scrape failed too many times, skipping this scrape cycle. ",
+                level="error",
+            )
             time.sleep(60)
             continue
         else:
@@ -110,6 +119,7 @@ def job_with_logging(conn: Connection | None = None) -> None:
         job(conn)
     except Exception as e:
         logging.getLogger(__name__).exception("Job failed: %s", e)
+        sentry_sdk.capture_exception(e)
         raise e
     finally:
         logging.shutdown()

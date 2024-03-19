@@ -26,6 +26,8 @@ def parse_player_data(data: QueryResponse) -> Player:
         int(base64_decode(badge["id"]).split("-")[-1]) if badge else None
         for badge in data["nameplate", "badges"]
     ]
+    # If badges is less than 3, fill the rest with None
+    badges.extend([None] * (3 - len(badges)))
     return Player(
         id=base64_decode(data["id"]).split(":")[-1],
         name=data["name"],
