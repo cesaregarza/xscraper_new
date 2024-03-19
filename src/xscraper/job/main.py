@@ -84,6 +84,7 @@ def job(conn: Connection | None = None) -> None:
             last_100_failures.pop(0)
             last_100_failures.append(0)
             logger.info("Scraping successful")
+            sentry_sdk.capture_message("Scraping successful. ", level="info")
         except Exception as e:
             logger.error("Scraping failed: %s", e)
             failed_count += 1
