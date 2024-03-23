@@ -91,6 +91,11 @@ def scrape(scraper: QueryHandler, conn: Connection | None = None) -> None:
         modes_to_update = calculate_modes_to_update(timestamp, conn)
 
     for schedule in modes_to_update:
+        if schedule["mode"] is None:
+            logger.info(
+                "No mode found in schedule, likely a Splatfest. Skipping."
+            )
+            continue
         logger.info("Scraping players for mode %s", schedule["mode"])
         mode = xc.mode_reverse_map[schedule["mode"]]
         players_in_mode = scrape_all_players_in_mode(scraper, mode, timestamp)
@@ -110,6 +115,10 @@ def scrape(scraper: QueryHandler, conn: Connection | None = None) -> None:
                 )
 
         players.extend(players_in_mode)
+    
+    if not players:
+        logger.info("No players found, skipping insertion")
+        return
 
     logger.info("Inserting players into the database")
     insert_players(conn, players)
