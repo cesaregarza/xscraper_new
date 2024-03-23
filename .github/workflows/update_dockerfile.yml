@@ -29,7 +29,7 @@ jobs:
           echo "droplet_ip=$DROPLET_IP" >> $GITHUB_OUTPUT
           echo "droplet_id=$DROPLET_ID" >> $GITHUB_OUTPUT
 
-      - name: Wait for MINUTE % 10 == 3
+      - name: Wait for MINUTE % 10 == 6
         run: |
           while true; do
             MINUTE=$(date +%M)
