@@ -33,7 +33,7 @@ jobs:
         run: |
           while true; do
             MINUTE=$(date +%M)
-            if [ $((MINUTE % 10)) -eq 9 ]; then
+            if [ $((MINUTE % 10)) -eq 2 ]; then
               break
             fi
             sleep 10
