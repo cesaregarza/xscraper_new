@@ -39,14 +39,14 @@ jobs:
             sleep 10
           done
 
-      - name: Add self IP to droplet firewall
-        id: add_self_ip
-        run: |
-          SELF_IP=${{ steps.self_ip.outputs.self_ip }}
-          doctl compute firewall add-rules \
-            ${{ steps.droplet_ip.outputs.droplet_id }} \
-            --inbound-rules="protocol:tcp,ports:22,address:$SELF_IP" \
-            --outbound-rules="protocol:tcp,ports:22,address:$SELF_IP"
+    #   - name: Add self IP to droplet firewall
+    #     id: add_self_ip
+    #     run: |
+    #       SELF_IP=${{ steps.self_ip.outputs.self_ip }}
+    #       doctl compute firewall add-rules \
+    #         ${{ steps.droplet_ip.outputs.droplet_id }} \
+    #         --inbound-rules="protocol:tcp,ports:22,address:$SELF_IP" \
+    #         --outbound-rules="protocol:tcp,ports:22,address:$SELF_IP"
 
       - name: SSH into droplet
         id: ssh
@@ -58,10 +58,10 @@ jobs:
           key: ${{ secrets.DIGITALOCEAN_SSH_KEY_ED }}
           script: bash update_container.sh
 
-      - name: Remove self IP from droplet firewall
-        if: ${{ steps.add_self_ip.outputs.outcome == 'success' }}
-        run: |
-          doctl compute firewall remove-rules \
-            ${{ steps.droplet_ip.outputs.droplet_id }} \
-            --inbound-rules="protocol:tcp,ports:22,address:$SELF_IP" \
-            --outbound-rules="protocol:tcp,ports:22,address:$SELF_IP"
+    #   - name: Remove self IP from droplet firewall
+    #     if: ${{ steps.add_self_ip.outputs.outcome == 'success' }}
+    #     run: |
+    #       doctl compute firewall remove-rules \
+    #         ${{ steps.droplet_ip.outputs.droplet_id }} \
+    #         --inbound-rules="protocol:tcp,ports:22,address:$SELF_IP" \
+    #         --outbound-rules="protocol:tcp,ports:22,address:$SELF_IP"
