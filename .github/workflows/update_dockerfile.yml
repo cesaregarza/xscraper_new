@@ -14,20 +14,11 @@ jobs:
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
-      - name: Get self ip
-        id: self_ip
-        run: |
-          SELF_IP=$(curl -s https://api.ipify.org)
-          echo "$SELF_IP"
-          echo "self_ip=$SELF_IP" >> $GITHUB_OUTPUT
-
       - name: Get droplet information
         id: droplet_ip
         run: |
           DROPLET_IP=$(doctl compute droplet get xscraper-01 --format PublicIPv4 --no-header)
-          DROPLET_ID=$(doctl compute droplet get xscraper-01 --format ID --no-header)
           echo "droplet_ip=$DROPLET_IP" >> $GITHUB_OUTPUT
-          echo "droplet_id=$DROPLET_ID" >> $GITHUB_OUTPUT
 
       - name: Wait for MINUTE % 10 == 6
         run: |
@@ -40,15 +31,6 @@ jobs:
             sleep 10
           done
 
-    #   - name: Add self IP to droplet firewall
-    #     id: add_self_ip
-    #     run: |
-    #       SELF_IP=${{ steps.self_ip.outputs.self_ip }}
-    #       doctl compute firewall add-rules \
-    #         ${{ steps.droplet_ip.outputs.droplet_id }} \
-    #         --inbound-rules="protocol:tcp,ports:22,address:$SELF_IP" \
-    #         --outbound-rules="protocol:tcp,ports:22,address:$SELF_IP"
-
       - name: SSH into droplet
         id: ssh
         uses: appleboy/ssh-action@v1.0.3
@@ -58,11 +40,3 @@ jobs:
           username: root
           key: ${{ secrets.DIGITALOCEAN_SSH_KEY_ED }}
           script: bash update_container.sh
-
-    #   - name: Remove self IP from droplet firewall
-    #     if: ${{ steps.add_self_ip.outputs.outcome == 'success' }}
-    #     run: |
-    #       doctl compute firewall remove-rules \
-    #         ${{ steps.droplet_ip.outputs.droplet_id }} \
-    #         --inbound-rules="protocol:tcp,ports:22,address:$SELF_IP" \
-    #         --outbound-rules="protocol:tcp,ports:22,address:$SELF_IP"
