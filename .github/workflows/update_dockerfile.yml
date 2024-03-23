@@ -33,7 +33,7 @@ jobs:
         run: |
           while true; do
             MINUTE=$(date +%M)
-            if [ $((MINUTE % 10)) -eq 2 ]; then
+            if [ $((MINUTE % 10)) -eq 6 ]; then
               break
             fi
             sleep 10
@@ -42,20 +42,11 @@ jobs:
       - name: Add self IP to droplet firewall
         id: add_self_ip
         run: |
+          SELF_IP=${{ steps.self_ip.outputs.self_ip }}
           doctl compute firewall add-rules \
             ${{ steps.droplet_ip.outputs.droplet_id }} \
             --inbound-rules="protocol:tcp,ports:22,address:$SELF_IP" \
             --outbound-rules="protocol:tcp,ports:22,address:$SELF_IP"
-
-      - name: Wait for MINUTE % 10 == 3
-        run: |
-          while true; do
-            MINUTE=$(date +%M)
-            if [ $((MINUTE % 10)) -eq 2 ]; then
-              break
-            fi
-            sleep 10
-          done
 
       - name: SSH into droplet
         id: ssh
