@@ -1,0 +1,44 @@
+name: Restart XScraper
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    environment: XScraper
+
+    steps:
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Get droplet information
+        id: droplet_ip
+        run: |
+          DROPLET_IP=$(doctl compute droplet get xscraper-01 --format PublicIPv4 --no-header)
+          echo "droplet_ip=$DROPLET_IP" >> $GITHUB_OUTPUT
+
+      - name: Wait for MINUTE % 10 == 6
+        run: |
+          while true; do
+            MINUTE=$(date +%M)
+            MINUTE=$((10#$MINUTE))
+            if [ $((MINUTE % 10)) -eq 6 ]; then
+              break
+            fi
+            sleep 10
+          done
+
+      - name: SSH into droplet
+        id: ssh
+        uses: appleboy/ssh-action@v1.0.3
+        continue-on-error: true
+        with:
+          host: ${{ steps.droplet_ip.outputs.droplet_ip }}
+          username: root
+          key: ${{ secrets.DIGITALOCEAN_SSH_KEY_ED }}
+          script: |
+            docker restart x_container
+
