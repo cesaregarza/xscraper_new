@@ -1,7 +1,14 @@
 name: Restart XScraper
 
 on:
+  schedule:
+    - cron: '0 0 */2 * *'
   workflow_dispatch:
+    inputs:
+      override:
+        description: 'Override the schedule'
+        default: 'false'
+        required: false
 
 jobs:
   run:
@@ -21,6 +28,7 @@ jobs:
           echo "droplet_ip=$DROPLET_IP" >> $GITHUB_OUTPUT
 
       - name: Wait for MINUTE % 10 == 6
+        if: ${{ github.event.inputs.override == 'false' }}
         run: |
           while true; do
             MINUTE=$(date +%M)
