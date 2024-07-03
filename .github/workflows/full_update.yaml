@@ -1,0 +1,13 @@
+name: Build, Update, and Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build_dockerfile.yml
+    with:
+      override-check: true
+
+  update:
+    uses: ./.github/workflows/update_dockerfile.yml
