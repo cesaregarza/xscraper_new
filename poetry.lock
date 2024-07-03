@@ -1552,14 +1552,14 @@ files = [
 
 [[package]]
 name = "splatnet3-scraper"
-version = "1.1.0"
+version = "1.1.3"
 description = "Scraper for SplatNet 3 for Splatoon 3"
 category = "main"
 optional = false
-python-versions = ">=3.10,<4.0"
+python-versions = "<4.0,>=3.10"
 files = [
-    {file = "splatnet3_scraper-1.1.0-py3-none-any.whl", hash = "sha256:28af2d0ebcac59d9cb68cd141d716d45339a60dd3bcea670c182805c8b7f9d7a"},
-    {file = "splatnet3_scraper-1.1.0.tar.gz", hash = "sha256:a963c1a83194c09cf726f2cd8ee1787e204767fae6dffe5b282409751fd213d6"},
+    {file = "splatnet3_scraper-1.1.3-py3-none-any.whl", hash = "sha256:e6c37910f41f5a09199d557a048cd97c7186b638cb545877deb0b76afa363611"},
+    {file = "splatnet3_scraper-1.1.3.tar.gz", hash = "sha256:eb3052fba8912c8ac57fc0530782418acb4d75e7f9b6689be4ac48871c7963d0"},
 ]
 
 [package.dependencies]
