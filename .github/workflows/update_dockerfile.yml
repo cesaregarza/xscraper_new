@@ -2,7 +2,17 @@ name: Update Docker Container
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to deploy"
+        required: true
+        type: string
   workflow_call:
+    inputs:
+      version:
+        description: "Version tag to deploy"
+        required: true
+        type: string
 
 jobs:
   run:
@@ -40,4 +50,10 @@ jobs:
           host: ${{ steps.droplet_ip.outputs.droplet_ip }}
           username: root
           key: ${{ secrets.DIGITALOCEAN_SSH_KEY_ED }}
-          script: bash update_container.sh
+          script: |
+            export IMAGE_TAG="${{ inputs.version || github.event.inputs.version }}"
+            if [ -z "$IMAGE_TAG" ]; then
+              echo "IMAGE_TAG is required"
+              exit 1
+            fi
+            bash update_container.sh "$IMAGE_TAG"

@@ -157,6 +157,7 @@ input_files
 
 # splatnet3_scraper files
 .splatnet3_scraper
+SCRAPER_*.ini
 tokens.ini
 *.csv
 *.parquet

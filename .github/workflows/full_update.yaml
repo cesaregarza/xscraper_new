@@ -10,4 +10,7 @@ jobs:
       override-check: true
 
   update:
+    needs: build
     uses: ./.github/workflows/update_dockerfile.yml
+    with:
+      version: ${{ needs.build.outputs.version }}
