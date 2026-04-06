@@ -945,8 +945,8 @@ wheels = [
 
 [[package]]
 name = "splatnet3-scraper"
-version = "2.0.0"
-source = { git = "https://github.com/cesaregarza/SplatNet3_Scraper.git?rev=eb720b9242f80788e8df8343efd08da2c066f68f#eb720b9242f80788e8df8343efd08da2c066f68f" }
+version = "2.0.2"
+source = { git = "https://github.com/cesaregarza/SplatNet3_Scraper.git?rev=6602b657c6418cf7c5a8a6e3f051671ba0e2f28a#6602b657c6418cf7c5a8a6e3f051671ba0e2f28a" }
 dependencies = [
     { name = "requests" },
 ]
@@ -1119,7 +1119,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.0.0,<2.0.0" },
     { name = "requests", specifier = ">=2.31.0,<3.0.0" },
     { name = "sentry-sdk", specifier = ">=1.42.0,<2.0.0" },
-    { name = "splatnet3-scraper", git = "https://github.com/cesaregarza/SplatNet3_Scraper.git?rev=eb720b9242f80788e8df8343efd08da2c066f68f" },
+    { name = "splatnet3-scraper", git = "https://github.com/cesaregarza/SplatNet3_Scraper.git?rev=6602b657c6418cf7c5a8a6e3f051671ba0e2f28a" },
     { name = "sqlalchemy", specifier = ">=2.0.19,<3.0.0" },
     { name = "sshtunnel", marker = "extra == 'dev'", specifier = ">=0.4.0,<0.5.0" },
     { name = "tqdm", marker = "extra == 'dev'", specifier = ">=4.66.1,<5.0.0" },

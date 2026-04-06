@@ -9,7 +9,7 @@ authors = [
     { name = "Cesar E Garza", email = "cesar@cegarza.com" }
 ]
 dependencies = [
-    "splatnet3-scraper @ git+https://github.com/cesaregarza/SplatNet3_Scraper.git@eb720b9242f80788e8df8343efd08da2c066f68f",
+    "splatnet3-scraper @ git+https://github.com/cesaregarza/SplatNet3_Scraper.git@6602b657c6418cf7c5a8a6e3f051671ba0e2f28a",
     "requests>=2.31.0,<3.0.0",
     "pyarrow>=12.0.1,<13.0.0",
     "pandas>=2.0.3,<3.0.0",
