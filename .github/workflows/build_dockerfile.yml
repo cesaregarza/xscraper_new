@@ -1,5 +1,8 @@
 name: Build Scraper
 
+permissions:
+  contents: write
+
 on:
   workflow_dispatch:
     inputs:
@@ -31,7 +34,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.CI_XSCRAPER_TOKEN }}
           fetch-depth: 0
 
       - name: Check for changes
@@ -66,8 +68,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.CI_XSCRAPER_TOKEN }}
 
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
