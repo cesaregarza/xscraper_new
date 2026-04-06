@@ -6,11 +6,13 @@ on:
 jobs:
   build:
     uses: ./.github/workflows/build_dockerfile.yml
+    secrets: inherit
     with:
       override-check: true
 
   update:
     needs: build
     uses: ./.github/workflows/update_dockerfile.yml
+    secrets: inherit
     with:
       version: ${{ needs.build.outputs.version }}
