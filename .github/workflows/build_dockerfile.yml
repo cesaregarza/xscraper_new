@@ -15,6 +15,10 @@ on:
         type: boolean
         required: false
         default: false
+    outputs:
+      version:
+        description: "Published image and release version"
+        value: ${{ jobs.build.outputs.version }}
 
 jobs:
   check:
@@ -25,7 +29,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.CI_XSCRAPER_TOKEN }}
           fetch-depth: 0
@@ -34,18 +38,11 @@ jobs:
         id: check_changes
         run: |
           echo "Checking for changes"
-          LATEST_TAG=$(git describe --tags --always `git rev-list --tags --max-count=1` 2>&1)
-          TAG_FETCH_EXIT_CODE=$?
-
-          if [ $TAG_FETCH_EXIT_CODE -ne 0 ]; then
-            echo "Failed to fetch latest tag, exit code: $TAG_FETCH_EXIT_CODE"
-            echo "skip=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
 
           if [ -z "$LATEST_TAG" ]; then
-            echo "No tags found, skipping"
-            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "No tags found, running initial build"
+            echo "skip=false" >> $GITHUB_OUTPUT
           else
             echo "Latest tag: $LATEST_TAG"
             CHANGES=$(git diff --name-only $LATEST_TAG HEAD -- 'src/')
@@ -60,7 +57,7 @@ jobs:
 
   build:
     needs: check
-    if: (needs.check.outputs.skip == 'false') || (github.event.inputs.override-check == 'true')
+    if: (needs.check.outputs.skip == 'false') || (inputs.override-check == true)
     runs-on: ubuntu-latest
     environment: XScraper
     outputs:
@@ -68,9 +65,8 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          ref: main
           token: ${{ secrets.CI_XSCRAPER_TOKEN }}
 
       - name: Install doctl
@@ -79,7 +75,7 @@ jobs:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
       - name: Install Docker
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Setup Git
         run: |
@@ -98,6 +94,9 @@ jobs:
           $(curl -sH "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           "https://api.github.com/repos/${{ github.repository }}/releases/latest" \
           | jq -r '.tag_name')
+          if [ "$LATEST_RELEASE" = "null" ]; then
+            LATEST_RELEASE="v0.0.0"
+          fi
           echo "release=${LATEST_RELEASE}" >> $GITHUB_OUTPUT
           echo "Latest Release: ${LATEST_RELEASE}"
 
@@ -147,11 +146,13 @@ jobs:
 
       - name: Build docker image
         run: |
-          echo "Version: ${{ steps.semver.outputs.version }}"
+          VERSION=${{ steps.calculate_version.outputs.version }}
+          echo "Version: ${VERSION}"
           docker build \
-          --tag xscraper:latest \
-          --build-arg BUILD_VERSION=${{ steps.calculate_version.outputs.version }} \
+          --tag xscraper:${VERSION} \
+          --build-arg BUILD_VERSION=${VERSION} \
           --build-arg TOKENS="${{ secrets.SESSION_TOKENS }}" \
+          --build-arg SCRAPER_SHARED_CONFIG_B64="${{ secrets.SCRAPER_SHARED_CONFIG_B64 }}" \
           --build-arg SENTRY_DSN="${{ secrets.SENTRY_DSN }}" \
           .
 
@@ -160,11 +161,13 @@ jobs:
 
       - name: Tag docker image
         run: |
-          docker tag xscraper:latest registry.digitalocean.com/sendouq/xscraper:latest
+          VERSION=${{ steps.calculate_version.outputs.version }}
+          docker tag xscraper:${VERSION} registry.digitalocean.com/sendouq/xscraper:${VERSION}
 
       - name: Push docker image
         run: |
-          docker push registry.digitalocean.com/sendouq/xscraper:latest
+          VERSION=${{ steps.calculate_version.outputs.version }}
+          docker push registry.digitalocean.com/sendouq/xscraper:${VERSION}
 
       - name: Create Release
         if: success()
@@ -173,7 +176,9 @@ jobs:
           NEXT_VERSION=${{ steps.calculate_version.outputs.version }}
           echo "Latest Release: ${LATEST_RELEASE}"
           echo "Next Version: v${NEXT_VERSION}"
-          if [[ $NEXT_VERSION != $LATEST_RELEASE ]]; then
+          if git ls-remote --exit-code --tags origin "refs/tags/v${NEXT_VERSION}" >/dev/null 2>&1; then
+              echo "Tag already exists, skipping"
+          elif [[ "v${NEXT_VERSION}" != "$LATEST_RELEASE" ]]; then
               echo "Creating Release"
               git tag -a v$NEXT_VERSION -m "AUTO: Release v$NEXT_VERSION"
               git push origin v$NEXT_VERSION
@@ -184,7 +189,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     needs: build
-    if: success()
+    if: ${{ needs.build.result == 'success' && needs.build.outputs.version != '' }}
 
     steps:
       - name: Create release
@@ -192,7 +197,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ needs.build.outputs.version }}
         run: |
-          gh release create v${{ env.tag }} \
-            --repo="$GITHUB_REPOSITORY" \
-            --title="${GITHUB_REPOSITORY#*/} v${{ env.tag }}" \
-            --generate-notes
+          if gh release view v${{ env.tag }} --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release already exists, skipping"
+          else
+            gh release create v${{ env.tag }} \
+              --repo="$GITHUB_REPOSITORY" \
+              --title="${GITHUB_REPOSITORY#*/} v${{ env.tag }}" \
+              --generate-notes
+          fi

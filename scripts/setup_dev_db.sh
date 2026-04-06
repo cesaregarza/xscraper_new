@@ -5,6 +5,7 @@ DB_NAME="xscraper"
 DB_USER="xscraper"
 DB_PASSWORD="obviouslynotthepassword"
 DB_PORT=5432
+DB_IMAGE="postgres:16"
 
 # Remove existing PostgreSQL container (if any)
 docker stop postgres-dev || true
@@ -16,7 +17,7 @@ docker run -d --name postgres-dev \
   -e POSTGRES_USER=$DB_USER \
   -e POSTGRES_PASSWORD=$DB_PASSWORD \
   -p $DB_PORT:5432 \
-  postgres:latest
+  $DB_IMAGE
 
 # Wait for the database to be ready
 sleep 5
