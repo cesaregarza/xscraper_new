@@ -945,14 +945,10 @@ wheels = [
 
 [[package]]
 name = "splatnet3-scraper"
-version = "2.0.1"
-source = { registry = "https://pypi.org/simple" }
+version = "2.0.0"
+source = { git = "https://github.com/cesaregarza/SplatNet3_Scraper.git?rev=eb720b9242f80788e8df8343efd08da2c066f68f#eb720b9242f80788e8df8343efd08da2c066f68f" }
 dependencies = [
     { name = "requests" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/67/67/9e9cccb7b7ee9362d46cb72172fb56eec9d9f3609b2f25a6f36ee20cec32/splatnet3_scraper-2.0.1.tar.gz", hash = "sha256:d6458ddc1e0539ca947789418c1cd3522b5e7217489c8573348b3ac18079f464", size = 407581, upload-time = "2026-04-06T06:55:15.41Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/5c/ec/df4a7fd8722b0e309bcca0e3ceac98f651c3e81bf3e8687bc6cc54a1e229/splatnet3_scraper-2.0.1-py3-none-any.whl", hash = "sha256:52dbfb98a1623985eb0d5a82c3ee5ef3e7c12bc1bd087aeaf24405d03b9dd119", size = 94301, upload-time = "2026-04-06T06:55:13.902Z" },
 ]
 
 [[package]]
@@ -1123,7 +1119,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.0.0,<2.0.0" },
     { name = "requests", specifier = ">=2.31.0,<3.0.0" },
     { name = "sentry-sdk", specifier = ">=1.42.0,<2.0.0" },
-    { name = "splatnet3-scraper", specifier = ">=2.0.1,<3.0.0" },
+    { name = "splatnet3-scraper", git = "https://github.com/cesaregarza/SplatNet3_Scraper.git?rev=eb720b9242f80788e8df8343efd08da2c066f68f" },
     { name = "sqlalchemy", specifier = ">=2.0.19,<3.0.0" },
     { name = "sshtunnel", marker = "extra == 'dev'", specifier = ">=0.4.0,<0.5.0" },
     { name = "tqdm", marker = "extra == 'dev'", specifier = ">=4.66.1,<5.0.0" },
