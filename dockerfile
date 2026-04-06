@@ -7,12 +7,6 @@ FROM $BASE_IMAGE AS base
 
 WORKDIR /app
 
-ENV POETRY_HOME="/opt/poetry" \
-    POETRY_VIRTUALENVS_CREATE=false \
-    POETRY_VIRTUALENVS_IN_PROJECT=false \
-    POETRY_NO_INTERACTION=1
-ENV PATH="$PATH:$POETRY_HOME/bin"
-
 # Install dependencies
 RUN apt-get update && apt-get install -y \
     curl \
@@ -20,18 +14,17 @@ RUN apt-get update && apt-get install -y \
     make \
     && rm -rf /var/lib/apt/lists/*
 
-# Install poetry
-RUN curl -sSL https://install.python-poetry.org | python3 - 
-
-RUN poetry config virtualenvs.create false
+# Install uv
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:/app/.venv/bin:$PATH"
 
 ###############################
 #    Install  Dependencies    #
 ###############################
 FROM base AS dependencies
 
-COPY pyproject.toml poetry.lock ./
-RUN poetry install --no-root --no-dev
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
 
 ###############################
 #        Build Image          #
@@ -53,8 +46,7 @@ RUN chmod +x /app/scripts/write_scraper_ini.sh && \
 
 ENV SENTRY_DSN=$SENTRY_DSN
 
-# Build the application
-RUN poetry version $BUILD_VERSION && \
-    poetry build && \
-    poetry install && \
-    poetry update
+# Update version in pyproject.toml and install the project into the image
+RUN sed -i "s/^version = \".*\"/version = \"${BUILD_VERSION}\"/" pyproject.toml && \
+    uv sync --frozen && \
+    uv build
