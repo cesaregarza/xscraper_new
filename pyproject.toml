@@ -9,7 +9,7 @@ authors = [
     { name = "Cesar E Garza", email = "cesar@cegarza.com" }
 ]
 dependencies = [
-    "splatnet3-scraper>=2.0.1,<3.0.0",
+    "splatnet3-scraper @ git+https://github.com/cesaregarza/SplatNet3_Scraper.git@eb720b9242f80788e8df8343efd08da2c066f68f",
     "requests>=2.31.0,<3.0.0",
     "pyarrow>=12.0.1,<13.0.0",
     "pandas>=2.0.3,<3.0.0",
@@ -39,6 +39,9 @@ setup_db = "xscraper.job.main:setup_db"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/xscraper"]
