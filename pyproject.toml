@@ -9,7 +9,7 @@ authors = [
     { name = "Cesar E Garza", email = "cesar@cegarza.com" }
 ]
 dependencies = [
-    "splatnet3-scraper>=1.1.6,<2.0.0",
+    "splatnet3-scraper>=2.0.1,<3.0.0",
     "requests>=2.31.0,<3.0.0",
     "pyarrow>=12.0.1,<13.0.0",
     "pandas>=2.0.3,<3.0.0",
