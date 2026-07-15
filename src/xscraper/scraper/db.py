@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 import psycopg2
@@ -28,6 +29,8 @@ from xscraper.sql.triggers import TRIGGER_SPLASHTAG_QUERY
 from xscraper.types import Player, Schedule
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from psycopg2.extensions import connection as Connection
 
 logger = logging.getLogger(__name__)
@@ -68,6 +71,37 @@ def get_db_connection(**kwargs) -> Connection:
     """
     logger.debug("Getting a connection to the PostgreSQL database")
     return psycopg2.connect(**get_db_credentials(), **kwargs)
+
+
+@contextmanager
+def db_connection(
+    existing: Connection | None = None, **kwargs
+) -> Iterator[Connection]:
+    """Yield a database connection, closing it only if opened here.
+
+    This encodes connection ownership so callers stop leaking connections. If
+    ``existing`` is provided it is yielded unchanged and left open for its
+    owner to close. Otherwise a new connection is created with
+    :func:`get_db_connection` and guaranteed to be closed on exit, even if the
+    caller returns early or raises. Previously the per-scrape connection was
+    never closed and relied on garbage collection to reap it, which could
+    exhaust the (shared) Postgres connection pool.
+
+    Args:
+        existing (Connection | None): A caller-owned connection to reuse. If
+            None, a new connection is created and owned by this context.
+        **kwargs: Additional keyword arguments forwarded to
+            :func:`get_db_connection` when creating a new connection.
+
+    Yields:
+        Connection: The database connection to use within the context.
+    """
+    conn = existing if existing is not None else get_db_connection(**kwargs)
+    try:
+        yield conn
+    finally:
+        if existing is None:
+            conn.close()
 
 
 def insert_players(conn: Connection, players: list[Player]) -> None:

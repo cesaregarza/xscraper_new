@@ -10,10 +10,10 @@ from splatnet3_scraper.query import QueryHandler
 import xscraper.variables as xv
 from xscraper.job.utils import load_scrapers, setup_logger
 from xscraper.scraper.db import (
+    db_connection,
     ensure_players_table_exists,
     ensure_schedule_table_exists,
     ensure_schema_exists,
-    get_db_connection,
 )
 from xscraper.scraper.main import scrape
 
@@ -135,12 +135,10 @@ def setup_db(conn: Connection | None = None) -> None:
     """
     logger.info("Setting up the database")
     load_dotenv()
-    if conn is None:
-        logger.debug("No database connection provided, creating a new one")
-        conn = get_db_connection()
-    ensure_schema_exists(conn)
-    ensure_players_table_exists(conn)
-    ensure_schedule_table_exists(conn)
+    with db_connection(conn) as conn:
+        ensure_schema_exists(conn)
+        ensure_players_table_exists(conn)
+        ensure_schedule_table_exists(conn)
 
 
 if __name__ == "__main__":

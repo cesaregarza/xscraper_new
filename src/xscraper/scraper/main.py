@@ -9,7 +9,7 @@ from splatnet3_scraper.query import QueryHandler
 
 from xscraper import constants as xc
 from xscraper.scraper.db import (
-    get_db_connection,
+    db_connection,
     insert_players,
     insert_schedule,
     select_latest_players,
@@ -77,48 +77,50 @@ def scrape(scraper: QueryHandler, conn: Connection | None = None) -> None:
     utc_tz = pytz.timezone("UTC")
     timestamp = utc_tz.localize(dt.datetime.now())
     players: list[Player] = []
-    if conn is None:
-        logger.debug("No database connection provided, creating a new one")
-        conn = get_db_connection()
-    modes_to_update = calculate_modes_to_update(timestamp, conn)
-
-    if modes_to_update[0] is None:
-        logger.info(
-            "No modes found, scraping the schedule, updating all modes, "
-            "and recalculating modes to update"
-        )
-        scrape_schedule(scraper, conn)
+    with db_connection(conn) as conn:
         modes_to_update = calculate_modes_to_update(timestamp, conn)
 
-    for schedule in modes_to_update:
-        if schedule["mode"] is None:
+        if modes_to_update[0] is None:
             logger.info(
-                "No mode found in schedule, likely a Splatfest. Skipping."
+                "No modes found, scraping the schedule, updating all modes, "
+                "and recalculating modes to update"
             )
-            continue
-        logger.info("Scraping players for mode %s", schedule["mode"])
-        mode = xc.mode_reverse_map[schedule["mode"]]
-        players_in_mode = scrape_all_players_in_mode(scraper, mode, timestamp)
-        logger.info("Selecting the latest players from the database")
-        latest_players = select_latest_players(conn, schedule["mode"])
-        player_dict = {player[0]: player for player in latest_players}
+            scrape_schedule(scraper, conn)
+            modes_to_update = calculate_modes_to_update(timestamp, conn)
 
-        logger.info("Appending rotation start and season number to player data")
-        for player in players_in_mode:
-            player["rotation_start"] = get_current_rotation_start()
-            player["season_number"] = calculate_season_number(timestamp)
-            if player["id"] not in player_dict:
-                player["updated"] = True
-            else:
-                player["updated"] = (
-                    player["x_power"] != player_dict[player["id"]][1]
+        for schedule in modes_to_update:
+            if schedule["mode"] is None:
+                logger.info(
+                    "No mode found in schedule, likely a Splatfest. Skipping."
                 )
+                continue
+            logger.info("Scraping players for mode %s", schedule["mode"])
+            mode = xc.mode_reverse_map[schedule["mode"]]
+            players_in_mode = scrape_all_players_in_mode(
+                scraper, mode, timestamp
+            )
+            logger.info("Selecting the latest players from the database")
+            latest_players = select_latest_players(conn, schedule["mode"])
+            player_dict = {player[0]: player for player in latest_players}
 
-        players.extend(players_in_mode)
-    
-    if not players:
-        logger.info("No players found, skipping insertion")
-        return
+            logger.info(
+                "Appending rotation start and season number to player data"
+            )
+            for player in players_in_mode:
+                player["rotation_start"] = get_current_rotation_start()
+                player["season_number"] = calculate_season_number(timestamp)
+                if player["id"] not in player_dict:
+                    player["updated"] = True
+                else:
+                    player["updated"] = (
+                        player["x_power"] != player_dict[player["id"]][1]
+                    )
 
-    logger.info("Inserting players into the database")
-    insert_players(conn, players)
+            players.extend(players_in_mode)
+
+        if not players:
+            logger.info("No players found, skipping insertion")
+            return
+
+        logger.info("Inserting players into the database")
+        insert_players(conn, players)
