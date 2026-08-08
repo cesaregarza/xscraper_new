@@ -27,6 +27,13 @@ ENSURE_PLAYER_TABLE_QUERY = (
     ")"
 )
 
+ENSURE_PLAYER_STORAGE_PARAMETERS_QUERY = (
+    "ALTER TABLE xscraper.players SET ("
+    "autovacuum_vacuum_insert_scale_factor = 0.01, "
+    "autovacuum_vacuum_insert_threshold = 50000"
+    ")"
+)
+
 CREATE_MODE_ENUM_QUERY = (
     "DO $$ BEGIN "
     "IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'mode_name') THEN "
