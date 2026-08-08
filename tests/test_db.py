@@ -1,7 +1,13 @@
 from __future__ import annotations
 
-from xscraper.scraper.db import ensure_schedule_table_exists
+from xscraper.scraper.db import (
+    ensure_players_table_exists,
+    ensure_schedule_table_exists,
+)
 from xscraper.sql.ensure import (
+    ENSURE_PLAYER_INDEX_QUERIES,
+    ENSURE_PLAYER_STORAGE_PARAMETERS_QUERY,
+    ENSURE_PLAYER_TABLE_QUERY,
     ENSURE_SCHEDULE_INDEX_QUERIES,
     ENSURE_SCHEDULE_TABLE_QUERY,
 )
@@ -31,6 +37,26 @@ class FakeConnection:
 
     def commit(self) -> None:
         self.commit_count += 1
+
+    def rollback(self) -> None:
+        message = "the fake cursor should not raise DuplicateObject"
+        raise AssertionError(message)
+
+
+def test_ensure_players_table_reconciles_vacuum_settings() -> None:
+    connection = FakeConnection()
+
+    ensure_players_table_exists(connection)
+
+    assert connection.cursor_instance.executed[:2] == [
+        ENSURE_PLAYER_TABLE_QUERY,
+        ENSURE_PLAYER_STORAGE_PARAMETERS_QUERY,
+    ]
+    index_count = len(ENSURE_PLAYER_INDEX_QUERIES)
+    assert connection.cursor_instance.executed[-index_count:] == (
+        ENSURE_PLAYER_INDEX_QUERIES
+    )
+    assert connection.commit_count == 2
 
 
 def test_ensure_schedule_table_uses_schedule_indexes() -> None:

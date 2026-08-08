@@ -11,6 +11,7 @@ from psycopg2.extras import execute_values
 from xscraper.sql.ensure import (
     CREATE_MODE_ENUM_QUERY,
     ENSURE_PLAYER_INDEX_QUERIES,
+    ENSURE_PLAYER_STORAGE_PARAMETERS_QUERY,
     ENSURE_PLAYER_TABLE_QUERY,
     ENSURE_SCHEDULE_INDEX_QUERIES,
     ENSURE_SCHEDULE_TABLE_QUERY,
@@ -262,6 +263,7 @@ def ensure_players_table_exists(conn: Connection) -> None:
     logger.debug("Ensuring that the players table exists in the database")
     with conn.cursor() as cursor:
         cursor.execute(ENSURE_PLAYER_TABLE_QUERY)
+        cursor.execute(ENSURE_PLAYER_STORAGE_PARAMETERS_QUERY)
         cursor.execute(FUNCTION_SPLASHTAG_QUERY)
         conn.commit()
         try:
