@@ -8,6 +8,11 @@ from psycopg2.extensions import connection as Connection
 from splatnet3_scraper.query import QueryHandler
 
 import xscraper.variables as xv
+from xscraper.job.recovery import (
+    UpstreamRecovery,
+    UpstreamRecoveryScheduled,
+    scrape_with_recovery,
+)
 from xscraper.job.utils import load_scrapers, setup_logger
 from xscraper.scraper.db import (
     db_connection,
@@ -15,7 +20,6 @@ from xscraper.scraper.db import (
     ensure_schedule_table_exists,
     ensure_schema_exists,
 )
-from xscraper.scraper.main import scrape
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +28,12 @@ def job(conn: Connection | None = None) -> None:
     """The main job function that runs the scraping job.
 
     Args:
-        conn (Connection | None): The database connection to use. If None, a new
-            connection will be created. Defaults to None.
+        conn (Connection | None): The database connection to use. If None,
+            a new connection will be created. Defaults to None.
+
+    Raises:
+        RuntimeError: If repeated unexpected failures exceed the safety
+            threshold.
     """
     logger.info("Starting the scraping job")
     load_dotenv()
@@ -46,28 +54,37 @@ def job(conn: Connection | None = None) -> None:
     failure_threshold = int(
         xv.FAILURE_TRACKER_SIZE * xv.FAILURE_THRESHOLD_FLOAT
     )
+    recovery = UpstreamRecovery(
+        xv.UPSTREAM_RECOVERY_BACKOFF_SECONDS,
+        jitter_ratio=xv.UPSTREAM_RECOVERY_JITTER_RATIO,
+    )
     while True:
         now = dt.datetime.now()
+        monotonic_now = time.monotonic()
         cadence_condition = now.minute % scrape_cadence == scrape_offset
-        if not cadence_condition and failed_count == 0:
+        recovery_attempt = recovery.active and recovery.ready(monotonic_now)
+        if recovery.active and not recovery_attempt:
+            logger.info(
+                "Upstream recovery backoff active; next attempt in %.0f "
+                "seconds",
+                recovery.seconds_until_retry(monotonic_now),
+            )
+            time.sleep(60 - now.second)
+            continue
+        elif recovery_attempt:
+            logger.info("Upstream recovery backoff elapsed, retrying")
+        elif not cadence_condition and failed_count == 0:
             logger.info("Cadence not met, sleeping for 60 seconds")
             time.sleep(60 - now.second)
             continue
         elif not cadence_condition and failed_count < 2:
             logger.info("Previous scrape failed, attempting again")
-            sentry_sdk.capture_message(
-                "Previous scrape failed, attempting again. ",
-                level="warning",
-            )
         elif not cadence_condition and failed_count >= 2:
             logger.error(
-                "Previous scrape failed too many times, sleeping for 60 seconds"
+                "Previous scrape failed too many times, sleeping for 60 "
+                "seconds"
             )
             failed_count = 0
-            sentry_sdk.capture_message(
-                "Scrape failed too many times, skipping this scrape cycle. ",
-                level="error",
-            )
             time.sleep(60)
             continue
         else:
@@ -79,12 +96,24 @@ def job(conn: Connection | None = None) -> None:
             idx = 0
         try:
             logger.info("Scraping with scraper %s", scraper)
-            scrape(scraper, conn)
+            recovered = scrape_with_recovery(
+                scraper,
+                conn,
+                recovery,
+                now=monotonic_now,
+            )
             failed_count = 0
             last_100_failures.pop(0)
             last_100_failures.append(0)
             logger.info("Scraping successful")
-            sentry_sdk.capture_message("Scraping successful. ", level="info")
+            if recovered:
+                logger.info("XScraper successfully recovered")
+        except UpstreamRecoveryScheduled as exc:
+            logger.warning(
+                "Transient upstream failure: %s; retrying in %.0f seconds",
+                exc.cause,
+                exc.delay,
+            )
         except Exception as e:
             logger.error("Scraping failed: %s", e)
             failed_count += 1
@@ -108,8 +137,11 @@ def job_with_logging(conn: Connection | None = None) -> None:
     """The main job function that runs the scraping job with logging.
 
     Args:
-        conn (Connection | None): The database connection to use. If None, a new
-            connection will be created. Defaults to None.
+        conn (Connection | None): The database connection to use. If None,
+            a new connection will be created. Defaults to None.
+
+    Raises:
+        Exception: If the scraping job exits with an unrecoverable error.
     """
     setup_logger(
         xv.LOG_FILE_PATH,
@@ -121,7 +153,7 @@ def job_with_logging(conn: Connection | None = None) -> None:
     except Exception as e:
         logging.getLogger(__name__).exception("Job failed: %s", e)
         sentry_sdk.capture_exception(e)
-        raise e
+        raise
     finally:
         logging.shutdown()
 
@@ -130,8 +162,8 @@ def setup_db(conn: Connection | None = None) -> None:
     """Sets up the database for the scraping job.
 
     Args:
-        conn (Connection | None): The database connection to use. If None, a new
-            connection will be created. Defaults to None.
+        conn (Connection | None): The database connection to use. If None,
+            a new connection will be created. Defaults to None.
     """
     logger.info("Setting up the database")
     load_dotenv()
